@@ -13,7 +13,6 @@ class ProductTableSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Limpiar datos previos para evitar duplicados si lo corren varias veces
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('product_performances')->truncate();
         DB::table('product_prices')->truncate();
@@ -21,7 +20,6 @@ class ProductTableSeeder extends Seeder
         DB::table('brands')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // 2. Insertar Marcas y recuperar sus IDs
         $cemixId = DB::table('brands')->insertGetId([
             'name' => 'CEMIX',
             'created_at' => Carbon::now(),
@@ -34,7 +32,6 @@ class ProductTableSeeder extends Seeder
             'updated_at' => Carbon::now(),
         ]);
 
-        // 3. Mapeo estructurado de las 5 cubetas finalistas de tus fichas de Canva
         $productsData = [
             // --- GAMA COMERCIAL: 3 AÑOS ---
             [
@@ -117,8 +114,8 @@ class ProductTableSeeder extends Seeder
 
         // 4. Ciclo de inserción relacional automatizado
         foreach ($productsData as $p) {
-            // Insertar el producto base
-            $productId = DB::table('products')->insertGetId([
+
+        $productId = DB::table('products')->insertGetId([
                 'brand_id' => $p['brand_id'],
                 'sku' => $p['sku'],
                 'erp_name' => $p['erp_name'],
