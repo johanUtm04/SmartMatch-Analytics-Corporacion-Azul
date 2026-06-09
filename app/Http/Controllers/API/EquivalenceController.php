@@ -12,7 +12,7 @@ class EquivalenceController extends Controller
     {
         // 1. Bring the products
         $products = DB::table('products as p')
-            ->join('brands as b', 'p.brand_id', '=', b.id')
+            ->join('brands as b', 'p.brand_id', '=', 'b.id')
             ->select('p.id', 'p.sku', 'p.technical_name', 'b.name as brand_name', 'p.volume_liters')
             ->get();
 
