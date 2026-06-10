@@ -10,64 +10,86 @@ class EquivalenceController extends Controller
 {
     public function calculate()
     {
-        // 1. Bring the products
         $products = DB::table('products as p')
             ->join('brands as b', 'p.brand_id', '=', 'b.id')
-            ->select('p.id', 'p.sku', 'p.technical_name', 'b.name as brand_name', 'p.volume_liters')
+            ->join('product_prices as pp', 'p.id', '=', 'pp.product_id')
+            ->select(
+                'p.id', 
+                'p.sku', 
+                'p.technical_name', 
+                'b.name as brand_name', 
+                'p.volume_liters',
+                'pp.price as bucket_price',
+                'p.guarantee_years'
+            )
             ->get();
 
-        $response = [];
+        $matchups = [];
 
-        // 2. Bring the latest price registered for this product
         foreach ($products as $product) {
-            $latestPrice = DB::table('product_prices')
-                ->where('product_id', $product->id)
-                ->orderBy('registered_at', 'desc')
-                ->first();
+            $years = $product->guarantee_years ?? 3; 
+            $brand = strtoupper($product->brand_name ?? '');
 
-            $price = $latestPrice ? (float)$latestPrice->price : 0;
+            $product->surfaces = [];
 
-            // 3. Bring the performances/coverages according to the surface (smooth/rough/general)
-            $performances = DB::table('product_performances')
-                ->where('product_id', $product->id)
-                ->get();
-
-            $surfaceCalculations = [];
-
-            foreach ($performances as $perf) {
-                //The mathematics: Cost = Bucket price / Square meters of coverage
-                // The worst scenario uses the minimum performance (spends more product)
-                $costWorst = $perf->min_coverage_m2 > 0 ? $price / $perf->min_coverage_m2 : 0;
-                // The best scenario uses the maximum performance (performs better)
-                $costBest = $perf->max_coverage_m2 > 0 ? $price / $perf->max_coverage_m2 : 0;
-
-                $surfaceCalculations[] = [
-                    'surface_type' => $perf->surface_type,
-                    'min_m2' => (float)$perf->min_coverage_m2,
-                    'max_m2' => (float)$perf->max_coverage_m2,
-                    'cost_per_m2' => [
-                        'best_case' => round($costBest, 2),
-                        'worst_case' => round($costWorst, 2)
-                    ]
-                ];
+            if ($brand === 'CEMIX') {
+                $matchups[$years]['cemix'] = $product;
+            } elseif ($brand === 'SIKA') {
+                $matchups[$years]['sika'] = $product;
             }
-
-            // 4. Structure the output JSON of this product
-            $response[] = [
-                'sku' => $product->sku,
-                'brand' => $product->brand_name,
-                'name' => $product->technical_name,
-                'bucket_price' => $price,
-                'volume_liters' => (float)$product->volume_liters,
-                'surfaces' => $surfaceCalculations
-            ];
         }
 
-        // Return the clean response
-        return response()->json([
-            'status' => 'success',
-            'calculated_at' => now()->toDateTimeString(),
-            'products' => $response
+        foreach ($matchups as $years => $segment) {
+            foreach (['cemix', 'sika'] as $brandKey) {
+                if (isset($segment[$brandKey])) {
+                    $productId = $segment[$brandKey]->id;
+                    $bucketPrice = $segment[$brandKey]->bucket_price;
+                    $volumeLiters = $segment[$brandKey]->volume_liters ?? 19;
+
+                    $performances = DB::table('product_performances')
+                        ->where('product_id', $productId)
+                        ->get();
+
+                    foreach ($performances as $perf) {
+                        $surfaceType = strtolower($perf->surface_type);
+                        
+                        $pricePerLiter = $bucketPrice / $volumeLiters;
+                        $costPerM2 = $pricePerLiter * $perf->consumption_per_m2;
+
+                        $matchups[$years][$brandKey]->surfaces[$surfaceType] = [
+                            'consumption' => $perf->consumption_per_m2,
+                            'cost_per_m2' => $costPerM2
+                        ];
+                    }
+                }
+            }
+        }
+
+        foreach ($matchups as $years => $segment) {
+            if (isset($segment['cemix']) && isset($segment['sika'])) {
+                
+                foreach (['liso', 'rugoso'] as $surfaceType) {
+                    $cemixCost = $segment['cemix']->surfaces[$surfaceType]['cost_per_m2'] ?? ($segment['cemix']->bucket_price / 55);
+                    $sikaCost = $segment['sika']->surfaces[$surfaceType]['cost_per_m2'] ?? ($segment['sika']->bucket_price / 40);
+
+                    $priceGap = $sikaCost - $cemixCost;
+                    $percentageGap = $cemixCost > 0 ? ($priceGap / $cemixCost) * 100 : 0;
+                    $isVulnerable = $percentageGap > 30;
+
+                    $matchups[$years]['analysis'][$surfaceType] = [
+                        'cemix_cost' => $cemixCost,
+                        'sika_cost' => $sikaCost,
+                        'price_gap' => $priceGap,
+                        'percentage_gap' => $percentageGap,
+                        'status' => $isVulnerable ? 'CRITICAL_VULNERABILITY' : 'STABLE_MARKET'
+                    ];
+                }
+            }
+        }
+
+        return response()->view('equivalence', [
+            'matchups' => $matchups,
+            'calculated_at' => now()->toDateTimeString()
         ]);
     }
 }
