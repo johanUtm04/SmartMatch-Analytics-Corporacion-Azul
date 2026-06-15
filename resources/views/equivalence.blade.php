@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartMatch - Panel Comercial</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* This creates a clean, thick vertical separator inside the table cells */
+        .table th.brand-divider, 
+        .table td.brand-divider {
+            border-right: 3px solid #dc3545 !important; /* Using Bootstrap red to match your design */
+        }
+    </style>
 </head>
 <body class="bg-light p-4">
 
@@ -30,7 +37,7 @@
                         <thead class="table-light small text-uppercase">
                             <tr>
                                 <th>Superficie</th>
-                                <th class="text-end">Costo Cemix m²</th>
+                                <th class="text-end brand-divider">Costo Cemix m²</th>
                                 <th class="text-end">Costo Sika m²</th>
                                 <th class="text-end">Brecha</th>
                                 <th class="text-end">Sobreprecio Sika</th>
@@ -46,7 +53,7 @@
                                     @endphp
                                     <tr>
                                         <td class="fw-bold text-capitalize">{{ $surface }}</td>
-                                        <td class="text-end">${{ number_format($analysis['cemix_cost'], 2) }}</td>
+                                        <td class="text-end brand-divider">${{ number_format($analysis['cemix_cost'], 2) }}</td>
                                         <td class="text-end">${{ number_format($analysis['sika_cost'], 2) }}</td>
                                         <td class="text-end fw-bold">${{ number_format($analysis['price_gap'], 2) }}</td>
                                         <td class="text-end fw-bold {{ $isVulnerable ? 'text-danger' : 'text-success' }}">
