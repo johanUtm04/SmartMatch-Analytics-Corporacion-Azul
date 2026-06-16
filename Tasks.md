@@ -6,3 +6,10 @@
 
 -It Is Still Serving HTML
 ![Still Serving HTML](/Errors/Captura%20de%20pantalla%202026-06-16%20151306.png)
+
+-Register API route in routes/api.php
+```bash
+// Registering the dynamic endpoint for the SmartMatch analytics matrix
+Route::get('/v1/equivalence/calculate', [EquivalenceController::class, 'calculate']);
+```
+

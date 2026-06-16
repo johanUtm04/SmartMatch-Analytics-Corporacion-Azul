@@ -1,4 +1,5 @@
 |<?php
 use App\Http\Controllers\API\EquivalenceController;
 
-Route::get('/metrics/equivalence', [EquivalenceController::class, 'calculate']);
+// Registering the dynamic endpoint for the SmartMatch analytics matrix
+Route::get('/v1/equivalence/calculate', [EquivalenceController::class, 'calculate']);
