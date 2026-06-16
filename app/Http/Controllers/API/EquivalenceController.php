@@ -10,6 +10,7 @@ class EquivalenceController extends Controller
 {
     public function calculate()
     {
+        // 1. Fetch products with their price data in ONE query
         $products = DB::table('products as p')
             ->join('brands as b', 'p.brand_id', '=', 'b.id')
             ->join('product_prices as pp', 'p.id', '=', 'pp.product_id')
@@ -24,8 +25,17 @@ class EquivalenceController extends Controller
             )
             ->get();
 
+        // Extract all product IDs to fetch all performances in ONE single query
+        $productIds = $products->pluck('id')->toArray();
+        
+        $allPerformances = DB::table('product_performances')
+            ->whereIn('product_id', $productIds)
+            ->get()
+            ->groupBy('product_id'); 
+
         $matchups = [];
 
+        // 2. Map products into segments based on guarantee years
         foreach ($products as $product) {
             $years = $product->guarantee_years ?? 3; 
             $brand = strtoupper($product->brand_name ?? '');
@@ -46,9 +56,8 @@ class EquivalenceController extends Controller
                     $bucketPrice = $segment[$brandKey]->bucket_price;
                     $volumeLiters = $segment[$brandKey]->volume_liters ?? 19;
 
-                    $performances = DB::table('product_performances')
-                        ->where('product_id', $productId)
-                        ->get();
+                    // Get performances from our collection in memory, avoiding database hits
+                    $performances = $allPerformances->get($productId) ?? collect();
 
                     foreach ($performances as $perf) {
                         $surfaceType = strtolower($perf->surface_type);
@@ -57,18 +66,20 @@ class EquivalenceController extends Controller
                         $costPerM2 = $pricePerLiter * $perf->consumption_per_m2;
 
                         $matchups[$years][$brandKey]->surfaces[$surfaceType] = [
-                            'consumption' => $perf->consumption_per_m2,
-                            'cost_per_m2' => $costPerM2
+                            'consumption' => (float)$perf->consumption_per_m2,
+                            'cost_per_m2' => (float)$costPerM2
                         ];
                     }
                 }
             }
         }
 
+        // 4. Calculate Market Gaps and Vulnerabilities
         foreach ($matchups as $years => $segment) {
             if (isset($segment['cemix']) && isset($segment['sika'])) {
                 
                 foreach (['liso', 'rugoso'] as $surfaceType) {
+                    // Safe fallbacks to prevent crashes if seeders generate incomplete surface data
                     $cemixCost = $segment['cemix']->surfaces[$surfaceType]['cost_per_m2'] ?? ($segment['cemix']->bucket_price / 55);
                     $sikaCost = $segment['sika']->surfaces[$surfaceType]['cost_per_m2'] ?? ($segment['sika']->bucket_price / 40);
 
@@ -77,19 +88,20 @@ class EquivalenceController extends Controller
                     $isVulnerable = $percentageGap > 30;
 
                     $matchups[$years]['analysis'][$surfaceType] = [
-                        'cemix_cost' => $cemixCost,
-                        'sika_cost' => $sikaCost,
-                        'price_gap' => $priceGap,
-                        'percentage_gap' => $percentageGap,
+                        'cemix_cost' => (float)$cemixCost,
+                        'sika_cost' => (float)$sikaCost,
+                        'price_gap' => (float)$priceGap,
+                        'percentage_gap' => (float)$percentageGap,
                         'status' => $isVulnerable ? 'CRITICAL_VULNERABILITY' : 'STABLE_MARKET'
                     ];
                 }
             }
         }
 
-        return response()->view('equivalence', [
-            'matchups' => $matchups,
-            'calculated_at' => now()->toDateTimeString()
-        ]);
+        return response()->json([
+            'status' => 'success',
+            'calculated_at' => now()->toDateTimeString(),
+            'matchups' => $matchups
+        ], 200);
     }
 }
