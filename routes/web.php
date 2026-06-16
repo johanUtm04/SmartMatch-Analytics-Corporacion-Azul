@@ -7,4 +7,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/analytics/view', [EquivalenceController::class, 'calculate']);
+Route::get('/dashboard', function () {
+    return view('dashboard');
+});

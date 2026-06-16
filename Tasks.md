@@ -13,3 +13,9 @@
 Route::get('/v1/equivalence/calculate', [EquivalenceController::class, 'calculate']);
 ```
 
+-Configure vite.config.js with the React plugin
+
+-Create balde container 
+-Create a dashboard.blade.php
+-Create app.tsx
+
