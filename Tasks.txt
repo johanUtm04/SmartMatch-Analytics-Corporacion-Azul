@@ -1,2 +1,0 @@
-16/06/2026
--Unsertand what does EquicalenceController.php
