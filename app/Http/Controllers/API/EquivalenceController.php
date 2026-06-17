@@ -10,100 +10,65 @@ class EquivalenceController extends Controller
 {
     public function calculate()
     {
-        // 1. Fetch products with their price data in ONE query
-        $products = DB::table('products as p')
-            ->join('brands as b', 'p.brand_id', '=', 'b.id')
-            ->join('product_prices as pp', 'p.id', '=', 'pp.product_id')
-            ->select(
-                'p.id', 
-                'p.sku', 
-                'p.technical_name', 
-                'b.name as brand_name', 
-                'p.volume_liters',
-                'pp.price as bucket_price',
-                'p.guarantee_years'
-            )
-            ->get();
+        // Traer los dos productos con sus relaciones de precio y rendimiento en una sola consulta estructurada
+        $cemix = DB::table('products')
+            ->join('product_prices', 'products.id', '=', 'product_prices.product_id')
+            ->join('product_performances', 'products.id', '=', 'product_performances.product_id')
+            ->where('products.sku', 'CX-IMPH-5Y')
+            ->select('products.*', 'product_prices.price', 'product_performances.consumption_per_m2')
+            ->first();
 
-        // OPTIMIZATION: Extract all product IDs to fetch all performances in ONE single query
-        $productIds = $products->pluck('id')->toArray();
-        
-        $allPerformances = DB::table('product_performances')
-            ->whereIn('product_id', $productIds)
-            ->get()
-            ->groupBy('product_id'); // Groups them by product_id automatically
+        $sika = DB::table('products')
+            ->join('product_prices', 'products.id', '=', 'product_prices.product_id')
+            ->join('product_performances', 'products.id', '=', 'product_performances.product_id')
+            ->where('products.sku', 'SK-ATIH-5Y')
+            ->select('products.*', 'product_prices.price', 'product_performances.consumption_per_m2')
+            ->first();
 
-        $matchups = [];
-
-        // 2. Map products into segments based on guarantee years
-        foreach ($products as $product) {
-            $years = $product->guarantee_years ?? 3; 
-            $brand = strtoupper($product->brand_name ?? '');
-
-            $product->surfaces = [];
-
-            if ($brand === 'CEMIX') {
-                $matchups[$years]['cemix'] = $product;
-            } elseif ($brand === 'SIKA') {
-                $matchups[$years]['sika'] = $product;
-            }
+        if (!$cemix || !$sika) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Faltan datos de los productos insignia en el sistema.'
+            ], 404);
         }
 
-        // 3. Attach performances using the pre-fetched memory cache (No more loops running queries)
-        foreach ($matchups as $years => $segment) {
-            foreach (['cemix', 'sika'] as $brandKey) {
-                if (isset($segment[$brandKey])) {
-                    $productId = $segment[$brandKey]->id;
-                    $bucketPrice = $segment[$brandKey]->bucket_price;
-                    $volumeLiters = $segment[$brandKey]->volume_liters ?? 19;
+        // Matriz de análisis basada en los costos de rendimiento por metro cuadrado
+        // Costo por m² = (Precio Cubeta / Litros Totales) * Consumo por m²
+        $cemix_cost_m2 = ($cemix->price / $cemix->volume_liters) * $cemix->consumption_per_m2;
+        $sika_cost_m2 = ($sika->price / $sika->volume_liters) * $sika->consumption_per_m2;
 
-                    // Get performances from our collection in memory, avoiding database hits
-                    $performances = $allPerformances->get($productId) ?? collect();
+        $price_gap = $sika_cost_m2 - $cemix_cost_m2;
+        $percentage_gap = ($cemix_cost_m2 > 0) ? ($price_gap / $cemix_cost_m2) * 100 : 0;
 
-                    foreach ($performances as $perf) {
-                        $surfaceType = strtolower($perf->surface_type);
-                        
-                        $pricePerLiter = $bucketPrice / $volumeLiters;
-                        $costPerM2 = $pricePerLiter * $perf->consumption_per_m2;
-
-                        $matchups[$years][$brandKey]->surfaces[$surfaceType] = [
-                            'consumption' => (float)$perf->consumption_per_m2,
-                            'cost_per_m2' => (float)$costPerM2
-                        ];
-                    }
-                }
-            }
+        if (ob_get_length()) {
+            ob_clean();
         }
 
-        // 4. Calculate Market Gaps and Vulnerabilities
-        foreach ($matchups as $years => $segment) {
-            if (isset($segment['cemix']) && isset($segment['sika'])) {
-                
-                foreach (['liso', 'rugoso'] as $surfaceType) {
-                    // Safe fallbacks to prevent crashes if seeders generate incomplete surface data
-                    $cemixCost = $segment['cemix']->surfaces[$surfaceType]['cost_per_m2'] ?? ($segment['cemix']->bucket_price / 55);
-                    $sikaCost = $segment['sika']->surfaces[$surfaceType]['cost_per_m2'] ?? ($segment['sika']->bucket_price / 40);
-
-                    $priceGap = $sikaCost - $cemixCost;
-                    $percentageGap = $cemixCost > 0 ? ($priceGap / $cemixCost) * 100 : 0;
-                    $isVulnerable = $percentageGap > 30;
-
-                    $matchups[$years]['analysis'][$surfaceType] = [
-                        'cemix_cost' => (float)$cemixCost,
-                        'sika_cost' => (float)$sikaCost,
-                        'price_gap' => (float)$priceGap,
-                        'percentage_gap' => (float)$percentageGap,
-                        'status' => $isVulnerable ? 'CRITICAL_VULNERABILITY' : 'STABLE_MARKET'
-                    ];
-                }
-            }
-        }
-
-        // CORRECTION: Return raw JSON response for React instead of a Blade view template
         return response()->json([
             'status' => 'success',
             'calculated_at' => now()->toDateTimeString(),
-            'matchups' => $matchups
+            'battleground' => [
+                'cemix' => [
+                    'name' => $cemix->technical_name,
+                    'sku' => $cemix->sku,
+                    'bucket_price' => (float)$cemix->price,
+                    'volume' => (float)$cemix->volume_liters,
+                    'consumption' => (float)$cemix->consumption_per_m2,
+                    'cost_m2' => round($cemix_cost_m2, 2)
+                ],
+                'sika' => [
+                    'name' => $sika->technical_name,
+                    'sku' => $sika->sku,
+                    'bucket_price' => (float)$sika->price,
+                    'volume' => (float)$sika->volume_liters,
+                    'consumption' => (float)$sika->consumption_per_m2,
+                    'cost_m2' => round($sika_cost_m2, 2)
+                ],
+                'analysis' => [
+                    'price_gap' => round($price_gap, 2),
+                    'percentage_gap' => round($percentage_gap, 1)
+                ]
+            ]
         ], 200);
     }
 }
