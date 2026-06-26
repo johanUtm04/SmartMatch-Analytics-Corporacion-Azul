@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             ProductTableSeeder::class,
-            EquivalenceMatchSeeder::class,
+            MarketingMatrixSeeder::class,
         ]);
     }
 }
