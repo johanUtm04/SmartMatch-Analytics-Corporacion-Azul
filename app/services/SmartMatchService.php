@@ -162,4 +162,25 @@ class SmartMatchService
 
         return 'tie';
     }
+
+    public function calculateBySkus(string $ownSku, string $competitorSku, float $areaM2 = 500): array
+    {
+        $match = DB::table('equivalence_matches')
+            ->join('products as own_products', 
+                'equivalence_matches.own_product_id', '=', 'own_products.id')
+            ->join('products as competitor_products', 
+            'equivalence_matches.competitor_product_id', '=', 'competitor_products.id')
+            ->where('own_products.sku', $ownSku)
+            ->where('competitor_products.sku', $competitorSku)
+            ->where('equivalence_matches.is_active', true)
+            ->select('equivalence_matches.*')
+            ->first();
+
+        if (!$match) {
+            throw new RuntimeException('Equivalence match not found for the provided SKUs.');
+        }
+
+        return $this->calculateByMatchId((int) $match->id, $areaM2);
+    }
+    
 }
