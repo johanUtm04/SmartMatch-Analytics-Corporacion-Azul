@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
+//expected structure of a object, in that case of a product in the battle
 interface ProductBattle {
     name: string;
     sku: string;
@@ -8,42 +9,51 @@ interface ProductBattle {
     volume: number;
     consumption: number;
     cost_m2: number;
-    image_path?: string; // Propiedad opcional para la ruta de la imagen dinámica
+    image_path?: string; 
 }
 
+//battle between two products, Cemix and Sika, with an analysis of the price gap and percentage gap
 interface BattlegroundPayload {
     cemix: ProductBattle;
     sika: ProductBattle;
+
     analysis: {
         price_gap: number;
         percentage_gap: number;
     };
 }
 
+//begins the main component of the application
 const App = () => {
+    //this creates a state varieble called originalData, originnally set on null
     const [originalData, setOriginalData] = useState<BattlegroundPayload | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
-    // Estados para la simulación interactiva de precios
+    // this creates two state variables to hold the simulated prices for Cemix and Sika, both initialized to 0
     const [cemixSimPrice, setCemixSimPrice] = useState<number>(0);
     const [sikaSimPrice, setSikaSimPrice] = useState<number>(0);
 
+    //appers after the component is mounted
     useEffect(() => {
+        //sends a get reqeuest to the backend to fetch the data for the battle between Cemix and Sika
         fetch('/api/v1/equivalence/calculate')
+        //converts the response to json
             .then(res => res.json())
+            //take handle the data received from the backend
             .then(data => {
                 if (data.status === 'success') {
                     setOriginalData(data.battleground);
-                    // Inicializar simulador con los precios reales del backend
                     setCemixSimPrice(data.battleground.cemix.bucket_price);
                     setSikaSimPrice(data.battleground.sika.bucket_price);
                 }
+                //set loading to false after the data is fetched and processed
                 setLoading(false);
             })
             .catch(() => setLoading(false));
     }, []);
 
-    // Motor de cálculo en tiempo real
+    // Real simulation calculations, useMemo is used to avoid unnecessary recalculations, I mean, 
+    // it will only recalculate when originalData, cemixSimPrice, or sikaSimPrice change
     const simulation = useMemo(() => {
         if (!originalData) return null;
 
@@ -61,6 +71,7 @@ const App = () => {
             gap_m2: roundTo(gap_m2, 2),
             gap_percentage: roundTo(gap_percentage, 1)
         };
+        //Only recalculate when originalData, cemixSimPrice, or sikaSimPrice change
     }, [originalData, cemixSimPrice, sikaSimPrice]);
 
     function roundTo(num: number, decimals: number) {
@@ -71,7 +82,7 @@ const App = () => {
         return (
             <div className="container p-5 text-center" style={{ marginTop: '15%' }}>
                 <div className="spinner-border text-primary" role="status"></div>
-                <p className="text-muted mt-3 fw-bold">Cargando zona de combate SmartMatch...</p>
+                <p className="text-muted mt-3 fw-bold">Cargando zona de combate SmartMatch espere...</p>
             </div>
         );
     }
@@ -81,7 +92,6 @@ const App = () => {
     return (
         <div className="container-fluid px-4 py-4" style={{ backgroundColor: '#f4f6f9', minHeight: '100vh' }}>
             
-            {/* Encabezado Principal */}
             <div className="d-flex justify-content-between align-items-center bg-white p-3 rounded shadow-sm border-start border-primary border-4 mb-4">
                 <div>
                     <h1 className="h4 fw-extrabold text-dark m-0">SmartMatch: Cara a Cara de Volumen Masivo</h1>

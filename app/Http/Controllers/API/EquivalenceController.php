@@ -13,14 +13,19 @@ class EquivalenceController extends Controller
     public function calculate(Request $request, SmartMatchService $smartMatchService)
     {
         try {
-
-            $matchId = (int) $request->query('match_id', 31);
             $areaM2 = (float) $request->query('area_m2', 500);
 
-            $result = $smartMatchService->calculateByMatchId($matchId, $areaM2);
+            // dd($areaM2);
 
-            return response()->json($result, 200);
-        } catch (RuntimeException $exception) {
+            if ($request->filled('match_id')) {
+                $matchId = (int) $request->query('match_id');
+
+                $result = $smartMatchService->calculateByMatchId($matchId, $areaM2);
+
+                return response()->json($result, 200);
+            }
+            
+            } catch (RuntimeException $exception) { 
             return response()->json([
                 'status' => 'error',
                 'message' => $exception->getMessage(),
