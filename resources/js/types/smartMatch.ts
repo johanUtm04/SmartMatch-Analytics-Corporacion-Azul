@@ -26,6 +26,15 @@ export type SmartMatchAnalysis = {
   percentage_gap: number;
   advantage_percentage: number;
   difference_total_investment: number;
+
+  commercial_status: string;
+  risk_level: string;
+  recommended_action: string;
+  pricing_recommendation: string;
+  target_price: number;
+  required_adjustment: number;
+  executive_summary: string;
+  sales_argument: string;
 };
 
 export type SmartMatchMatch = {
