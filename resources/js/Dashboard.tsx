@@ -26,7 +26,7 @@ export default function Dashboard() {
 
         {loading && (
           <StatusCard
-            title="Loading SmartMatch..."
+            title="Cargando Resultados"
             message="Calculating the selected product comparison."
           />
         )}
