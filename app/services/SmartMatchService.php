@@ -92,13 +92,22 @@ class SmartMatchService
                     'total_investment' => round($competitorCostM2 * $areaM2, 2),
                 ],
 
-                'analysis' => [
+                'analysis' => array_merge([
                     'winner' => $winner,
                     'price_gap_m2' => round($gap, 2),
                     'percentage_gap' => round($percentageGap, 1),
                     'advantage_percentage' => round(abs($percentageGap), 1),
                     'difference_total_investment' => round(($competitorCostM2 - $ownCostM2) * $areaM2, 2),
-                ],
+                ], 
+                //We save the strategic fields in a separate method
+                $this->buildStrategicFields(
+                    $winner,
+                    $ownProduct,
+                    $competitorProduct,
+                    $ownCostM2,
+                    $competitorCostM2,
+                    $areaM2
+                )),
             ],
         ];
     }
