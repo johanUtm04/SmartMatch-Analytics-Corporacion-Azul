@@ -8,6 +8,7 @@ export async function calculateSmartMatch(
   params: CalculateSmartMatchParams,
   signal?: AbortSignal
 ): Promise<SmartMatchResponse> {
+  //here we use URLSearchParams to build the query string for the GET request
   const searchParams = new URLSearchParams();
 
   if (params.matchId) {
