@@ -172,6 +172,230 @@ class SmartMatchService
         return 'tie';
     }
 
+    private function buildStrategicFields(
+    string $winner,
+    object $ownProduct,
+    object $competitorProduct,
+    float $ownCostM2,
+    float $competitorCostM2,
+    float $areaM2
+): array {
+    $advantagePercentage = $ownCostM2 > 0
+        ? abs((($competitorCostM2 - $ownCostM2) / $ownCostM2) * 100)
+        : 0;
+
+    $differenceTotalInvestment = ($competitorCostM2 - $ownCostM2) * $areaM2;
+
+    $targetPrice = $this->calculateTargetPrice(
+        $competitorCostM2,
+        (float) $ownProduct->volume_liters,
+        (float) $ownProduct->consumption_per_m2
+    );
+
+    $requiredAdjustment = (float) $ownProduct->price - $targetPrice;
+
+    return [
+        'commercial_status' => $this->getCommercialStatus($winner),
+        'risk_level' => $this->getRiskLevel($winner, $advantagePercentage),
+        'recommended_action' => $this->getRecommendedAction($winner, $advantagePercentage),
+        'pricing_recommendation' => $this->getPricingRecommendation(
+            $winner,
+            (float) $ownProduct->price,
+            $targetPrice,
+            $requiredAdjustment
+        ),
+        'target_price' => round($targetPrice, 2),
+        'required_adjustment' => round($requiredAdjustment, 2),
+        'executive_summary' => $this->getExecutiveSummary(
+            $winner,
+            $ownProduct,
+            $competitorProduct,
+            $advantagePercentage,
+            $differenceTotalInvestment,
+            $areaM2
+        ),
+        'sales_argument' => $this->getSalesArgument(
+            $winner,
+            $ownProduct,
+            $competitorProduct,
+            $advantagePercentage,
+            $differenceTotalInvestment,
+            $areaM2
+        ),
+    ];
+}
+
+private function calculateTargetPrice(
+    float $competitorCostM2,
+    float $ownVolumeLiters,
+    float $ownConsumptionPerM2
+): float {
+    if ($competitorCostM2 <= 0 || $ownVolumeLiters <= 0 || $ownConsumptionPerM2 <= 0) {
+        return 0;
+    }
+
+    return ($competitorCostM2 * $ownVolumeLiters) / $ownConsumptionPerM2;
+}
+
+private function getCommercialStatus(string $winner): string
+{
+    return match ($winner) {
+        'own_product' => 'advantage',
+        'competitor_product' => 'risk',
+        'tie' => 'parity',
+        default => 'insufficient_data',
+    };
+}
+
+private function getRiskLevel(string $winner, float $advantagePercentage): string
+{
+    if ($winner === 'insufficient_data') {
+        return 'undefined';
+    }
+
+    if ($winner === 'own_product') {
+        if ($advantagePercentage >= 30) {
+            return 'low';
+        }
+
+        if ($advantagePercentage >= 10) {
+            return 'medium_low';
+        }
+
+        return 'competitive_watch';
+    }
+
+    if ($winner === 'competitor_product') {
+        if ($advantagePercentage >= 30) {
+            return 'high';
+        }
+
+        if ($advantagePercentage >= 10) {
+            return 'medium';
+        }
+
+        return 'low';
+    }
+
+    return 'neutral';
+}
+
+private function getRecommendedAction(string $winner, float $advantagePercentage): string
+{
+    if ($winner === 'own_product') {
+        if ($advantagePercentage >= 30) {
+            return 'Usar la ventaja de costo por m² como argumento comercial principal. Reforzar comunicación de ahorro, rendimiento y menor inversión total.';
+        }
+
+        return 'Defender la posición actual con mensajes de valor, disponibilidad y respaldo técnico. Mantener vigilancia de precio contra competencia.';
+    }
+
+    if ($winner === 'competitor_product') {
+        if ($advantagePercentage >= 30) {
+            return 'Revisar precio objetivo de Cemix de forma prioritaria. Evaluar ajuste comercial, paquete promocional o argumento de valor agregado.';
+        }
+
+        return 'Monitorear el diferencial y preparar una estrategia de defensa con precio, disponibilidad, garantía o soporte técnico.';
+    }
+
+    if ($winner === 'tie') {
+        return 'La comparación está en paridad. La estrategia debe enfocarse en confianza de marca, disponibilidad, garantía, soporte técnico y facilidad de aplicación.';
+    }
+
+    return 'Completar o validar datos de precio, volumen y rendimiento antes de tomar una decisión comercial.';
+}
+
+private function getPricingRecommendation(
+    string $winner,
+    float $ownPrice,
+    float $targetPrice,
+    float $requiredAdjustment
+): string {
+    if ($winner === 'own_product') {
+        return 'No se requiere ajuste de precio inmediato. Cemix conserva ventaja por costo por m² frente a la competencia.';
+    }
+
+    if ($winner === 'competitor_product') {
+        if ($targetPrice <= 0) {
+            return 'No es posible calcular precio objetivo por falta de datos completos.';
+        }
+
+        if ($requiredAdjustment > 0) {
+            return 'Para igualar el costo por m² de la competencia, Cemix debería evaluar un precio objetivo aproximado de $'
+                . number_format($targetPrice, 2)
+                . ' MXN, equivalente a un ajuste de $'
+                . number_format($requiredAdjustment, 2)
+                . ' MXN sobre el precio actual.';
+        }
+
+        return 'Cemix ya se encuentra por debajo del precio objetivo estimado. Revisar si el diferencial viene de rendimiento, no de precio.';
+    }
+
+    if ($winner === 'tie') {
+        return 'No se requiere ajuste inmediato. La decisión comercial puede basarse en valor agregado y disponibilidad.';
+    }
+
+    return 'No hay datos suficientes para emitir una recomendación de precio.';
+}
+
+private function getExecutiveSummary(
+    string $winner,
+    object $ownProduct,
+    object $competitorProduct,
+    float $advantagePercentage,
+    float $differenceTotalInvestment,
+    float $areaM2
+): string {
+    $ownName = $ownProduct->technical_name;
+    $competitorName = $competitorProduct->technical_name;
+
+    if ($winner === 'own_product') {
+        return "{$ownName} tiene ventaja comercial frente a {$competitorName}, con una diferencia estimada de {$advantagePercentage}% en costo por m². Para una obra de {$areaM2} m², Cemix representa un ahorro aproximado de $"
+            . number_format(abs($differenceTotalInvestment), 2)
+            . " MXN.";
+    }
+
+    if ($winner === 'competitor_product') {
+        return "{$competitorName} tiene ventaja comercial frente a {$ownName}, con una diferencia estimada de {$advantagePercentage}% en costo por m². Para una obra de {$areaM2} m², la competencia representa una inversión menor aproximada de $"
+            . number_format(abs($differenceTotalInvestment), 2)
+            . " MXN.";
+    }
+
+    if ($winner === 'tie') {
+        return "{$ownName} y {$competitorName} se encuentran en paridad de costo por m². La decisión comercial dependerá de disponibilidad, confianza, garantía y soporte técnico.";
+    }
+
+    return 'No hay datos suficientes para generar un resumen ejecutivo confiable.';
+}
+
+private function getSalesArgument(
+    string $winner,
+    object $ownProduct,
+    object $competitorProduct,
+    float $advantagePercentage,
+    float $differenceTotalInvestment,
+    float $areaM2
+): string {
+    $ownName = $ownProduct->technical_name;
+    $competitorName = $competitorProduct->technical_name;
+
+    if ($winner === 'own_product') {
+        return "Argumento de venta: {$ownName} ofrece una mejor relación costo-rendimiento que {$competitorName}. En una superficie de {$areaM2} m², el cliente puede reducir su inversión aproximada en $"
+            . number_format(abs($differenceTotalInvestment), 2)
+            . " MXN, manteniendo una solución competitiva para impermeabilización.";
+    }
+
+    if ($winner === 'competitor_product') {
+        return "Argumento defensivo: {$competitorName} presenta una ventaja de costo por m² de {$advantagePercentage}%. Para competir, Cemix debe reforzar disponibilidad, respaldo técnico, garantía, confianza de marca o revisar una estrategia de precio objetivo.";
+    }
+
+    if ($winner === 'tie') {
+        return "Argumento de venta: ambos productos están muy cercanos en costo por m². La recomendación es vender por confianza, disponibilidad, garantía, asesoría técnica y experiencia de aplicación.";
+    }
+
+    return 'No hay datos suficientes para construir un argumento comercial confiable.';
+}
+
     public function calculateBySkus(string $ownSku, string $competitorSku, float $areaM2 = 500): array
     {
         $match = DB::table('equivalence_matches')
