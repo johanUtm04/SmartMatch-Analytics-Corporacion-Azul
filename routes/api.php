@@ -1,4 +1,4 @@
-|<?php
+<?php
 use App\Http\Controllers\API\EquivalenceController;
 use Illuminate\Support\Facades\Route;
 

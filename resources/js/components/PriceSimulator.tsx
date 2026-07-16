@@ -15,15 +15,15 @@ export default function PriceSimulator({
 }: PriceSimulatorProps) {
   return (
     <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-bold text-slate-900">Scenario Simulator</h2>
+      <h2 className="text-lg font-bold text-slate-900">Simulador de Escenarios</h2>
 
       <p className="mt-1 text-sm text-slate-500">
-        Adjust the project area to estimate total investment.
+        Ajusta el área del proyecto para estimar la inversión total.
       </p>
 
       <div className="mt-5">
         <label className="text-sm font-semibold text-slate-700">
-          Project area: {formatNumber(areaM2)} m²
+          Área del proyecto: {formatNumber(areaM2)} m²
         </label>
 
         <input
@@ -57,7 +57,7 @@ function InvestmentCard({ product }: { product: SmartMatchProduct }) {
   return (
     <div className="rounded-xl bg-slate-50 p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {product.brand}
+        {product.brand} 
       </p>
 
       <h3 className="mt-1 text-sm font-bold text-slate-900">{product.name}</h3>
@@ -66,14 +66,14 @@ function InvestmentCard({ product }: { product: SmartMatchProduct }) {
 
       <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
         <div>
-          <p className="text-slate-500">Cost/m²</p>
+          <p className="text-slate-500">Costo/m²</p>
           <p className="font-bold text-slate-900">
             ${formatNumber(product.cost_m2)} {product.currency}
           </p>
         </div>
 
         <div>
-          <p className="text-slate-500">Investment</p>
+          <p className="text-slate-500">Inversión</p>
           <p className="font-bold text-slate-900">
             ${formatNumber(product.total_investment)} {product.currency}
           </p>

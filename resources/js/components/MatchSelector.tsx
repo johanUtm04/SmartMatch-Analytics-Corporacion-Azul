@@ -40,10 +40,10 @@ export default function MatchSelector({
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-lg font-bold text-slate-900">
-            Select comparison
+            Selecciona un matchup de productos
           </h2>
           <p className="text-sm text-slate-500">
-            Choose one of the real product matchups loaded from the matrix.
+            Escoge un matchup de productos para analizar y comparar. Cada matchup representa dos productos equivalentes de diferentes marcas.
           </p>
         </div>
 

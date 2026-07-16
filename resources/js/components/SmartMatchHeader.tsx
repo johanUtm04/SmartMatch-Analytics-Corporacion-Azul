@@ -6,13 +6,13 @@ export default function SmartMatchHeader() {
       </p>
 
       <h1 className="mt-2 text-3xl font-bold text-slate-900">
-        Product Cannibalization Dashboard
+        Tablero de Canibización de Productos (entre marcas)
       </h1>
 
       <p className="mt-2 max-w-4xl text-slate-600">
-        Compare equivalent products, calculate cost per m², detect competitive
-        advantage, and generate strategic insights for marketing, sales, pricing,
-        and product strategy.
+        Compara productos equivalentes, calcula costo por m², detecta ventaja 
+        competitiva y genera <strong>insights estratégicos</strong>  para marketing, ventas, pricing y 
+        estrategia de producto.
       </p>
     </header>
   );

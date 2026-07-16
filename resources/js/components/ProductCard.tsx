@@ -25,35 +25,35 @@ export default function ProductCard({ product, label }: ProductCardProps) {
 
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <DataPoint
-          label="Bucket price"
+          label="Precio de la cubeta"
           value={`$${formatNumber(product.bucket_price)} ${product.currency}`}
         />
 
         <DataPoint
-          label="Volume"
+          label="Volumen de la cubeta"
           value={`${formatNumber(product.volume_liters)} L`}
         />
 
         <DataPoint
-          label="Consumption"
+          label="Consumo"
           value={`${formatNumber(product.consumption_per_m2)} L/m²`}
         />
 
         <DataPoint
-          label="Coverage"
+          label="Cobertura"
           value={`${formatNumber(product.min_coverage_m2)} - ${formatNumber(
             product.max_coverage_m2
           )} m²`}
         />
 
         <DataPoint
-          label="Cost per m²"
+          label="Costo por m²"
           value={`$${formatNumber(product.cost_m2)} ${product.currency}`}
           highlight
         />
 
         <DataPoint
-          label="Total investment"
+          label="Inversión total"
           value={`$${formatNumber(product.total_investment)} ${
             product.currency
           }`}

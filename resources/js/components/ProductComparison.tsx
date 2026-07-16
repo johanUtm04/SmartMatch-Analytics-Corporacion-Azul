@@ -12,8 +12,8 @@ export default function ProductComparison({
 }: ProductComparisonProps) {
   return (
     <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-      <ProductCard product={ownProduct} label="Own product" />
-      <ProductCard product={competitorProduct} label="Competitor product" />
+      <ProductCard product={ownProduct} label="Producto propio" />
+      <ProductCard product={competitorProduct} label="Producto del competidor" />
     </section>
   );
 }

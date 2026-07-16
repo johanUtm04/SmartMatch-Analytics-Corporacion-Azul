@@ -13,7 +13,7 @@ export default function StrategicAlert({ analysis }: StrategicAlertProps) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Strategic Diagnosis
+            Diadnostico estrategia comercial
           </p>
 
           <h2 className="mt-1 text-2xl font-bold text-slate-900">
@@ -21,7 +21,7 @@ export default function StrategicAlert({ analysis }: StrategicAlertProps) {
           </h2>
 
           <p className="mt-2 text-slate-600">
-            Advantage difference:{" "}
+            Ventaja de diferencia:{" "}
             <span className="font-bold text-slate-900">
               {analysis.advantage_percentage}%
             </span>
@@ -30,7 +30,7 @@ export default function StrategicAlert({ analysis }: StrategicAlertProps) {
 
         <div className="rounded-xl bg-slate-100 px-5 py-4 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Risk Level
+            Nivel de Riesgo Comercial
           </p>
 
           <p className="mt-1 text-xl font-bold text-slate-900">{riskLabel}</p>
@@ -39,14 +39,14 @@ export default function StrategicAlert({ analysis }: StrategicAlertProps) {
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
         <Metric
-          label="Gap per m²"
+          label="Espacio por m²"
           value={`$${formatNumber(analysis.price_gap_m2)}`}
         />
 
-        <Metric label="Percentage gap" value={`${analysis.percentage_gap}%`} />
+        <Metric label="Porcentaje de brecha" value={`${analysis.percentage_gap}%`} />
 
         <Metric
-          label="Total difference"
+          label="Diferencia total"
           value={`$${formatNumber(analysis.difference_total_investment)}`}
         />
       </div>
@@ -69,7 +69,7 @@ function getAlertMessage(winner: SmartMatchAnalysis["winner"]) {
   }
 
   if (winner === "competitor_product") {
-    return "Competitor has the commercial advantage.";
+    return "El competidor tiene la vetaja comercial.";
   }
 
   if (winner === "tie") {
@@ -80,9 +80,9 @@ function getAlertMessage(winner: SmartMatchAnalysis["winner"]) {
 }
 
 function getRiskLabel(advantagePercentage: number) {
-  if (advantagePercentage >= 30) return "High";
-  if (advantagePercentage >= 10) return "Medium";
-  if (advantagePercentage > 0) return "Low";
+  if (advantagePercentage >= 30) return "Alto";
+  if (advantagePercentage >= 10) return "Medio";
+  if (advantagePercentage > 0) return "Bajo";
   return "Neutral";
 }
 
