@@ -8,6 +8,8 @@ type MatchSelectorProps = {
   onChange: (matchId: number) => void;
 };
 
+//this are previously defined matchups, but the intention is 
+//make a dynamic list of matchups that can be fetched from the backend
 const MATCH_OPTIONS: MatchOption[] = [
   {
     id: 31,
