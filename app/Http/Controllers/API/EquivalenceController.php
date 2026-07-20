@@ -61,4 +61,9 @@ class EquivalenceController extends Controller
             ], 500);
         }
     }
+
+    public function matches(SmartMatchService $smartMatchService)
+    {
+        
+    }
 }
