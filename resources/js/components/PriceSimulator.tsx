@@ -15,7 +15,7 @@ export default function PriceSimulator({
 }: PriceSimulatorProps) {
   return (
     <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-bold text-slate-900">Simulador de Escenarios</h2>
+      <h2 className="text-lg font-bold text-[#1B2A56]">Simulador de Escenarios</h2>
 
       <p className="mt-1 text-sm text-slate-500">
         Ajusta el área del proyecto para estimar la inversión total.
@@ -33,7 +33,7 @@ export default function PriceSimulator({
           step={50}
           value={areaM2}
           onChange={(event) => onAreaChange(Number(event.target.value))}
-          className="mt-3 w-full"
+          className="mt-3 w-full accent-[#C8102E]"
         />
 
         <input
@@ -41,7 +41,7 @@ export default function PriceSimulator({
           min={1}
           value={areaM2}
           onChange={(event) => onAreaChange(Number(event.target.value))}
-          className="mt-3 w-full rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          className="mt-3 w-full rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-[#1B2A56] focus:ring-2 focus:ring-[#1B2A56]/20"
         />
       </div>
 
@@ -55,9 +55,9 @@ export default function PriceSimulator({
 
 function InvestmentCard({ product }: { product: SmartMatchProduct }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {product.brand} 
+    <div className="rounded-xl border-l-4 border-[#C8102E] bg-[#EEF1F8] p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#1B2A56]">
+        {product.brand}
       </p>
 
       <h3 className="mt-1 text-sm font-bold text-slate-900">{product.name}</h3>
@@ -67,14 +67,14 @@ function InvestmentCard({ product }: { product: SmartMatchProduct }) {
       <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
         <div>
           <p className="text-slate-500">Costo/m²</p>
-          <p className="font-bold text-slate-900">
+          <p className="font-bold text-[#1B2A56]">
             ${formatNumber(product.cost_m2)} {product.currency}
           </p>
         </div>
 
         <div>
           <p className="text-slate-500">Inversión</p>
-          <p className="font-bold text-slate-900">
+          <p className="font-bold text-[#1B2A56]">
             ${formatNumber(product.total_investment)} {product.currency}
           </p>
         </div>

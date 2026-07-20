@@ -15,17 +15,17 @@ export default function CommercialArgument({
   return (
     <section className="mt-5 space-y-5">
       <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Matrix Context
+        <p className="text-sm font-semibold uppercase tracking-wide text-[#C8102E]">
+          Contexto de la Matriz
         </p>
 
-        <h2 className="mt-2 text-xl font-bold text-slate-900">{match.gama}</h2>
+        <h2 className="mt-2 text-xl font-bold text-[#1B2A56]">{match.gama}</h2>
 
         <p className="mt-1 text-sm text-slate-500">
           {match.technical_segmentation}
         </p>
 
-        <div className="mt-5 rounded-xl bg-slate-50 p-5">
+        <div className="mt-5 rounded-xl bg-[#EEF1F8] p-5">
           <p className="leading-relaxed text-slate-700">
             {match.strategic_analysis}
           </p>
@@ -33,8 +33,8 @@ export default function CommercialArgument({
       </article>
 
       <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Recommended Action
+        <p className="text-sm font-semibold uppercase tracking-wide text-[#C8102E]">
+          Acción Recomendada
         </p>
 
         <p className="mt-3 leading-relaxed text-slate-700">
@@ -43,8 +43,8 @@ export default function CommercialArgument({
       </article>
 
       <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Pricing Recommendation
+        <p className="text-sm font-semibold uppercase tracking-wide text-[#C8102E]">
+          Recomendación de Precio
         </p>
 
         <p className="mt-3 leading-relaxed text-slate-700">
@@ -53,20 +53,20 @@ export default function CommercialArgument({
 
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <SmallMetric
-            label="Target price"
+            label="Precio objetivo"
             value={`$${formatNumber(analysis.target_price)} MXN`}
           />
 
           <SmallMetric
-            label="Required adjustment"
+            label="Ajuste requerido"
             value={`$${formatNumber(analysis.required_adjustment)} MXN`}
           />
         </div>
       </article>
 
       <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Sales Argument
+        <p className="text-sm font-semibold uppercase tracking-wide text-[#C8102E]">
+          Argumento de Venta
         </p>
 
         <p className="mt-3 leading-relaxed text-slate-700">
@@ -79,11 +79,11 @@ export default function CommercialArgument({
 
 function SmallMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-4">
+    <div className="rounded-xl bg-[#EEF1F8] p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </p>
-      <p className="mt-1 text-lg font-bold text-slate-900">{value}</p>
+      <p className="mt-1 text-lg font-bold text-[#1B2A56]">{value}</p>
     </div>
   );
 }
