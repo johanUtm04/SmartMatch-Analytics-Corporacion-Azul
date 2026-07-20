@@ -4,11 +4,19 @@ import type {
   SmartMatchResponse,
 } from "../types/smartMatch";
 
+export type SmartMatchOption = {
+  id: number;
+  label: string;
+  own_product: string;
+  competitor_product: string;
+  gama: string;
+  match_type: string;
+};
+
 export async function calculateSmartMatch(
   params: CalculateSmartMatchParams,
   signal?: AbortSignal
 ): Promise<SmartMatchResponse> {
-  //here we use URLSearchParams to build the query string for the GET request
   const searchParams = new URLSearchParams();
 
   if (params.matchId) {
@@ -46,4 +54,28 @@ export async function calculateSmartMatch(
   }
 
   return json;
+}
+
+export async function getSmartMatchMatches(
+  signal?: AbortSignal
+): Promise<SmartMatchOption[]> {
+  const response = await fetch("/api/v1/equivalence/matches", {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+    signal,
+  });
+
+  const json = (await response.json()) as
+    | { status: "success"; data: SmartMatchOption[] }
+    | SmartMatchErrorResponse;
+
+  if (!response.ok || json.status === "error") {
+    throw new Error(
+      "message" in json ? json.message : "SmartMatch matches request failed."
+    );
+  }
+
+  return json.data;
 }
