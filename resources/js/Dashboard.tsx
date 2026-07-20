@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSmartMatch } from "./hooks/useSmartMatch";
+import { useSmartMatchMatches } from "./hooks/useSmartMatchMatches";
 
 import SmartMatchHeader from "./components/SmartMatchHeader";
 import MatchSelector from "./components/MatchSelector";
@@ -9,38 +10,82 @@ import ProductComparison from "./components/ProductComparison";
 import CommercialArgument from "./components/CommercialArgument";
 
 export default function Dashboard() {
-  const [matchId, setMatchId] = useState<number>(31);
+  const [matchId, setMatchId] = useState<number | null>(null);
   const [areaM2, setAreaM2] = useState<number>(500);
 
-  const { data, loading, error, refetch } = useSmartMatch({
-    matchId,
+  const {
+    matches,
+    loading: matchesLoading,
+    error: matchesError,
+    refetch: refetchMatches,
+  } = useSmartMatchMatches();
+
+  useEffect(() => {
+    if (!matchId && matches.length > 0) {
+      setMatchId(matches[0].id);
+    }
+  }, [matches, matchId]);
+
+  const {
+    data,
+    loading: smartMatchLoading,
+    error: smartMatchError,
+    refetch: refetchSmartMatch,
+  } = useSmartMatch({
+    matchId: matchId ?? undefined,
     areaM2,
   });
+
+  const isLoading = matchesLoading || smartMatchLoading;
+  const hasMatchSelected = Boolean(matchId);
 
   return (
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-7xl">
         <SmartMatchHeader />
 
-        <MatchSelector selectedMatchId={matchId} onChange={setMatchId} />
+        <MatchSelector
+          matches={matches}
+          selectedMatchId={matchId}
+          loading={matchesLoading}
+          error={matchesError}
+          onChange={setMatchId}
+          onRetry={refetchMatches}
+        />
 
-        {loading && (
+        {isLoading && (
           <StatusCard
-            title="Cargando Resultados"
-            message="Calculating the selected product comparison."
+            title="Loading SmartMatch..."
+            message="Loading comparisons and calculating the selected product matchup."
           />
         )}
 
-        {error && (
+        {!isLoading && matchesError && (
           <StatusCard
-            title="SmartMatch error"
-            message={error}
+            title="Could not load comparisons"
+            message={matchesError}
             actionLabel="Try again"
-            onAction={refetch}
+            onAction={refetchMatches}
           />
         )}
 
-        {!loading && !error && data && (
+        {!isLoading && !matchesError && !hasMatchSelected && (
+          <StatusCard
+            title="No comparison selected"
+            message="There are no active SmartMatch comparisons available yet."
+          />
+        )}
+
+        {!isLoading && !matchesError && smartMatchError && (
+          <StatusCard
+            title="SmartMatch calculation error"
+            message={smartMatchError}
+            actionLabel="Try again"
+            onAction={refetchSmartMatch}
+          />
+        )}
+
+        {!isLoading && !matchesError && !smartMatchError && data && (
           <>
             <StrategicAlert analysis={data.battlefield.analysis} />
 
@@ -90,6 +135,7 @@ function StatusCard({
 
       {actionLabel && onAction && (
         <button
+          type="button"
           onClick={onAction}
           className="mt-4 rounded-xl bg-slate-900 px-4 py-2 font-semibold text-white transition hover:bg-slate-700"
         >
