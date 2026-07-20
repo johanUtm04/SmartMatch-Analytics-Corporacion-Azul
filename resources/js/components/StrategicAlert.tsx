@@ -1,4 +1,3 @@
-// StrategicAlert.tsx
 import type { SmartMatchAnalysis } from "../types/smartMatch";
 
 type StrategicAlertProps = {
