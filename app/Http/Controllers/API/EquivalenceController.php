@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Services\SmartMatchService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Throwable;
 
@@ -62,8 +63,51 @@ class EquivalenceController extends Controller
         }
     }
 
-    public function matches(SmartMatchService $smartMatchService)
+    public function matches()
     {
-        
+        try {
+            $matches = DB::table('equivalence_matches')
+                ->join('products as own_products', 'equivalence_matches.own_product_id', '=', 'own_products.id')
+                ->join('products as competitor_products', 'equivalence_matches.competitor_product_id', '=', 'competitor_products.id')
+                ->where('equivalence_matches.is_active', true)
+                ->select(
+                    'equivalence_matches.id',
+                    'equivalence_matches.match_type',
+                    'equivalence_matches.gama',
+                    'equivalence_matches.technical_segmentation',
+                    'equivalence_matches.priority',
+                    'own_products.erp_name as own_product',
+                    'own_products.sku as own_sku',
+                    'competitor_products.erp_name as competitor_product',
+                    'competitor_products.sku as competitor_sku'
+                )
+                ->orderBy('equivalence_matches.priority')
+                ->get()
+                ->map(function ($match) {
+                    return [
+                        'id' => $match->id,
+                        'label' => $match->own_product . ' vs ' . $match->competitor_product,
+                        'own_product' => $match->own_product,
+                        'own_sku' => $match->own_sku,
+                        'competitor_product' => $match->competitor_product,
+                        'competitor_sku' => $match->competitor_sku,
+                        'gama' => $match->gama,
+                        'match_type' => $match->match_type,
+                        'technical_segmentation' => $match->technical_segmentation,
+                        'priority' => $match->priority,
+                    ];
+                });
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $matches,
+            ], 200);
+        } catch (Throwable $exception) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unexpected error loading SmartMatch matches.',
+                'debug' => $exception->getMessage(),
+            ], 500);
+        }
     }
 }
