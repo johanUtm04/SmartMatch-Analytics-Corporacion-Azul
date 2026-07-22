@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import ProductsTable from "./admin/components/ProductsTable";
 import { useAdminData } from "./admin/hooks/useAdminData";
+
 
 type Brand = {
   id: number;
@@ -115,71 +117,6 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
 
       <p className="mt-2 text-3xl font-bold text-slate-900">{value}</p>
     </article>
-  );
-}
-
-function ProductsTable({ products }: { products: Product[] }) {
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900">Products</h2>
-          <p className="text-sm text-slate-500">
-            Products available for SmartMatch comparisons.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
-        >
-          New product
-        </button>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-separate border-spacing-y-2 text-left text-sm">
-          <thead>
-            <tr className="text-slate-500">
-              <th className="px-3 py-2">Brand</th>
-              <th className="px-3 py-2">SKU</th>
-              <th className="px-3 py-2">ERP name</th>
-              <th className="px-3 py-2">Price</th>
-              <th className="px-3 py-2">Volume</th>
-              <th className="px-3 py-2">Cost data</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.id} className="rounded-xl bg-slate-50">
-                <td className="px-3 py-3 font-semibold text-slate-900">
-                  {product.brand}
-                </td>
-
-                <td className="px-3 py-3 text-slate-700">{product.sku}</td>
-
-                <td className="px-3 py-3 text-slate-700">
-                  {product.erp_name}
-                </td>
-
-                <td className="px-3 py-3 text-slate-700">
-                  ${formatNumber(product.price)} {product.currency}
-                </td>
-
-                <td className="px-3 py-3 text-slate-700">
-                  {formatNumber(product.volume_liters)} L
-                </td>
-
-                <td className="px-3 py-3 text-slate-700">
-                  {formatNumber(product.consumption_per_m2)} L/m²
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
   );
 }
 
