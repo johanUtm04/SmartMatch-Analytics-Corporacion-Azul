@@ -61,65 +61,65 @@ class ProductController extends Controller
         }    
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-public function store(StoreProductRequest $request)
-{
-    try {
-        $validated = $request->validated();
+        /**
+         * Store a newly created resource in storage.
+         */
+    public function store(StoreProductRequest $request)
+    {
+        try {
+            $validated = $request->validated();
 
-        $productId = DB::transaction(function () use ($validated) {
-            $productId = DB::table('products')->insertGetId([
-                'brand_id' => $validated['brand_id'],
-                'sku' => $validated['sku'],
-                'erp_name' => $validated['erp_name'],
-                'technical_name' => $validated['technical_name'],
-                'guarantee_years' => $validated['guarantee_years'] ?? 0,
-                'volume_liters' => $validated['volume_liters'],
-                'base_type' => $validated['base_type'] ?? null,
-                'is_fibrated' => $validated['is_fibrated'],
-                'requires_separate_primer' => $validated['requires_separate_primer'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $productId = DB::transaction(function () use ($validated) {
+                $productId = DB::table('products')->insertGetId([
+                    'brand_id' => $validated['brand_id'],
+                    'sku' => $validated['sku'],
+                    'erp_name' => $validated['erp_name'],
+                    'technical_name' => $validated['technical_name'],
+                    'guarantee_years' => $validated['guarantee_years'] ?? 0,
+                    'volume_liters' => $validated['volume_liters'],
+                    'base_type' => $validated['base_type'] ?? null,
+                    'is_fibrated' => $validated['is_fibrated'],
+                    'requires_separate_primer' => $validated['requires_separate_primer'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-            DB::table('product_prices')->insert([
-                'product_id' => $productId,
-                'price' => $validated['price'],
-                'currency' => strtoupper($validated['currency']),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+                DB::table('product_prices')->insert([
+                    'product_id' => $productId,
+                    'price' => $validated['price'],
+                    'currency' => strtoupper($validated['currency']),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-            DB::table('product_performances')->insert([
-                'product_id' => $productId,
-                'surface_type' => $validated['surface_type'] ?? 'general',
-                'consumption_per_m2' => $validated['consumption_per_m2'],
-                'min_coverage_m2' => $validated['min_coverage_m2'],
-                'max_coverage_m2' => $validated['max_coverage_m2'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+                DB::table('product_performances')->insert([
+                    'product_id' => $productId,
+                    'surface_type' => $validated['surface_type'] ?? 'general',
+                    'consumption_per_m2' => $validated['consumption_per_m2'],
+                    'min_coverage_m2' => $validated['min_coverage_m2'],
+                    'max_coverage_m2' => $validated['max_coverage_m2'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-            return $productId;
-        });
+                return $productId;
+            });
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Product created successfully.',
-            'data' => [
-                'id' => $productId,
-            ],
-        ], 201);
-    } catch (Throwable $exception) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Unexpected error creating product.',
-            'debug' => $exception->getMessage(),
-        ], 500);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Product created successfully.',
+                'data' => [
+                    'id' => $productId,
+                ],
+            ], 201);
+        } catch (Throwable $exception) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unexpected error creating product.',
+                'debug' => $exception->getMessage(),
+            ], 500);
+        }
     }
-}
 
     /**
      * Display the specified resource.
@@ -176,124 +176,158 @@ public function store(StoreProductRequest $request)
     /**
      * Update the specified resource in storage.
      */
-public function update(UpdateProductRequest $request, string $id)
-{
-    try {
-        $validated = $request->validated();
+    public function update(UpdateProductRequest $request, string $id)
+    {
+        try {
+            $validated = $request->validated();
 
-        $productExists = DB::table('products')
-            ->where('id', $id)
-            ->exists();
+            $productExists = DB::table('products')
+                ->where('id', $id)
+                ->exists();
 
-        if (!$productExists) {
+            if (!$productExists) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Product not found.',
+                ], 404);
+            }
+
+            DB::transaction(function () use ($validated, $id) {
+                DB::table('products')
+                    ->where('id', $id)
+                    ->update([
+                        'brand_id' => $validated['brand_id'],
+                        'sku' => $validated['sku'],
+                        'erp_name' => $validated['erp_name'],
+                        'technical_name' => $validated['technical_name'],
+                        'guarantee_years' => $validated['guarantee_years'] ?? 0,
+                        'volume_liters' => $validated['volume_liters'],
+                        'base_type' => $validated['base_type'] ?? null,
+                        'is_fibrated' => $validated['is_fibrated'],
+                        'requires_separate_primer' => $validated['requires_separate_primer'],
+                        'updated_at' => now(),
+                    ]);
+
+                DB::table('product_prices')->updateOrInsert(
+                    ['product_id' => $id],
+                    [
+                        'price' => $validated['price'],
+                        'currency' => strtoupper($validated['currency']),
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]
+                );
+
+                DB::table('product_performances')->updateOrInsert(
+                    ['product_id' => $id],
+                    [
+                        'surface_type' => $validated['surface_type'] ?? 'general',
+                        'consumption_per_m2' => $validated['consumption_per_m2'],
+                        'min_coverage_m2' => $validated['min_coverage_m2'],
+                        'max_coverage_m2' => $validated['max_coverage_m2'],
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]
+                );
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Product updated successfully.',
+            ], 200);
+        } catch (Throwable $exception) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Product not found.',
-            ], 404);
+                'message' => 'Unexpected error updating product.',
+                'debug' => $exception->getMessage(),
+            ], 500);
         }
+    }
 
-        DB::transaction(function () use ($validated, $id) {
-            DB::table('products')
+    public function destroy(string $id)
+    {
+        try {
+            $product = DB::table('products')
+                ->where('id', $id)
+                ->first();
+
+            if (!$product) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Product not found.',
+                ], 404);
+            }
+
+            $isUsedInMatches = DB::table('equivalence_matches')
+                ->where('own_product_id', $id)
+                ->orWhere('competitor_product_id', $id)
+                ->exists();
+
+            if ($isUsedInMatches) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'This product cannot be deleted because it is used in one or more equivalence matches. Deactivate or update those matches first.',
+                ], 409);
+            }
+
+            DB::transaction(function () use ($id) {
+                DB::table('product_performances')
+                    ->where('product_id', $id)
+                    ->delete();
+
+                DB::table('product_prices')
+                    ->where('product_id', $id)
+                    ->delete();
+
+                DB::table('products')
+                    ->where('id', $id)
+                    ->delete();
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Product deleted successfully.',
+            ], 200);
+        } catch (Throwable $exception) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unexpected error deleting product.',
+                'debug' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function restore(string $id)
+    {
+        try {
+            $match = DB::table('products')
+                ->where('id', $id)
+                ->first();
+
+            if (!$match) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Product not found.',
+                ], 404);
+            }
+
+            DB::table('equivalence_matches')
                 ->where('id', $id)
                 ->update([
-                    'brand_id' => $validated['brand_id'],
-                    'sku' => $validated['sku'],
-                    'erp_name' => $validated['erp_name'],
-                    'technical_name' => $validated['technical_name'],
-                    'guarantee_years' => $validated['guarantee_years'] ?? 0,
-                    'volume_liters' => $validated['volume_liters'],
-                    'base_type' => $validated['base_type'] ?? null,
-                    'is_fibrated' => $validated['is_fibrated'],
-                    'requires_separate_primer' => $validated['requires_separate_primer'],
+                    'is_active' => true,
                     'updated_at' => now(),
                 ]);
 
-            DB::table('product_prices')->updateOrInsert(
-                ['product_id' => $id],
-                [
-                    'price' => $validated['price'],
-                    'currency' => strtoupper($validated['currency']),
-                    'updated_at' => now(),
-                    'created_at' => now(),
-                ]
-            );
-
-            DB::table('product_performances')->updateOrInsert(
-                ['product_id' => $id],
-                [
-                    'surface_type' => $validated['surface_type'] ?? 'general',
-                    'consumption_per_m2' => $validated['consumption_per_m2'],
-                    'min_coverage_m2' => $validated['min_coverage_m2'],
-                    'max_coverage_m2' => $validated['max_coverage_m2'],
-                    'updated_at' => now(),
-                    'created_at' => now(),
-                ]
-            );
-        });
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Product updated successfully.',
-        ], 200);
-    } catch (Throwable $exception) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Unexpected error updating product.',
-            'debug' => $exception->getMessage(),
-        ], 500);
-    }
-}
-
-public function destroy(string $id)
-{
-    try {
-        $product = DB::table('products')
-            ->where('id', $id)
-            ->first();
-
-        if (!$product) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Equivalence match restored successfully.',
+            ], 200);
+        } catch (Throwable $exception) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Product not found.',
-            ], 404);
+                'message' => 'Unexpected error restoring equivalence match.',
+                'debug' => $exception->getMessage(),
+            ], 500);
         }
-
-        $isUsedInMatches = DB::table('equivalence_matches')
-            ->where('own_product_id', $id)
-            ->orWhere('competitor_product_id', $id)
-            ->exists();
-
-        if ($isUsedInMatches) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'This product cannot be deleted because it is used in one or more equivalence matches. Deactivate or update those matches first.',
-            ], 409);
-        }
-
-        DB::transaction(function () use ($id) {
-            DB::table('product_performances')
-                ->where('product_id', $id)
-                ->delete();
-
-            DB::table('product_prices')
-                ->where('product_id', $id)
-                ->delete();
-
-            DB::table('products')
-                ->where('id', $id)
-                ->delete();
-        });
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Product deleted successfully.',
-        ], 200);
-    } catch (Throwable $exception) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Unexpected error deleting product.',
-            'debug' => $exception->getMessage(),
-        ], 500);
     }
-}
 }
