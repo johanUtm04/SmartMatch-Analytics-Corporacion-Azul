@@ -244,11 +244,56 @@ public function update(UpdateProductRequest $request, string $id)
     }
 }
 
-    public function destroy(string $id)
-    {
+public function destroy(string $id)
+{
+    try {
+        $product = DB::table('products')
+            ->where('id', $id)
+            ->first();
+
+        if (!$product) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Product not found.',
+            ], 404);
+        }
+
+        $isUsedInMatches = DB::table('equivalence_matches')
+            ->where('own_product_id', $id)
+            ->orWhere('competitor_product_id', $id)
+            ->exists();
+
+        if ($isUsedInMatches) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'This product cannot be deleted because it is used in one or more equivalence matches. Deactivate or update those matches first.',
+            ], 409);
+        }
+
+        DB::transaction(function () use ($id) {
+            DB::table('product_performances')
+                ->where('product_id', $id)
+                ->delete();
+
+            DB::table('product_prices')
+                ->where('product_id', $id)
+                ->delete();
+
+            DB::table('products')
+                ->where('id', $id)
+                ->delete();
+        });
+
         return response()->json([
-            'status' => 'pending',
-            'message' => 'Product delete endpoint not implemented yet.',
-        ], 501);
+            'status' => 'success',
+            'message' => 'Product deleted successfully.',
+        ], 200);
+    } catch (Throwable $exception) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Unexpected error deleting product.',
+            'debug' => $exception->getMessage(),
+        ], 500);
     }
+}
 }

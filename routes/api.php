@@ -12,4 +12,6 @@ Route::get('/v1/equivalence/matches', [EquivalenceController::class, 'matches'])
 Route::prefix('/v1/admin')->group(function () {
     Route::apiResource('/products', ProductController::class);
     Route::apiResource('/equivalence-matches', EquivalenceMatchController::class);
+    
+    Route::patch('/equivalence-matches/{id}/restore', [EquivalenceMatchController::class, 'restore']);
 });

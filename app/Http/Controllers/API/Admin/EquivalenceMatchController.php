@@ -199,34 +199,69 @@ public function store(StoreEquivalenceMatchRequest $request)
 
     public function destroy(string $id)
     {
-    try {
-        $match = DB::table('equivalence_matches')
-            ->where('id', $id)
-            ->first();
+        try {
+            $match = DB::table('equivalence_matches')
+                ->where('id', $id)
+                ->first();
 
-        if (!$match) {
+                if (!$match){
+                    return response ()->json([
+                        'status' => 'error',
+                        'message' => 'Equivalence match not found. '
+                    ], 404);
+                }
+
+            DB::table('equivalence_matches')
+                ->where('id', $id)
+                ->update([
+                    'is_active' => false,
+                    'updated_at' => now(),
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Equivalence match deactivated successfully.',
+                ], 200);
+            }catch (Throwable $exception) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unexpected error deactivating equivalence match.',
+                    'debug' => $exception->getMessage(),
+                ], 500);
+            }
+}
+
+    public function restore(string $id)
+    {
+        try {
+            $match = DB::table('equivalence_matches')
+                ->where('id', $id)
+                ->first();
+
+            if (!$match) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Equivalence match not found.',
+                ], 404);
+            }
+
+            DB::table('equivalence_matches')
+                ->where('id', $id)
+                ->update([
+                    'is_active' => true,
+                    'updated_at' => now(),
+                ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Equivalence match restored successfully.',
+            ], 200);
+        } catch (Throwable $exception) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Equivalence match not found.',
-            ], 404);
+                'message' => 'Unexpected error restoring equivalence match.',
+                'debug' => $exception->getMessage(),
+            ], 500);
         }
-
-        DB::table('equivalence_matches')
-            ->where('id', $id)
-            ->update([
-                'is_active' => false,
-                'updated_at' => now(),
-            ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Equivalence match deactivated successfully.',
-        ], 200);
-    } catch (Throwable $exception) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Unexpected error deactivating equivalence match.',
-            'debug' => $exception->getMessage(),
-        ], 500);
     }
 }
