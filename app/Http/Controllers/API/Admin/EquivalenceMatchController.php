@@ -5,6 +5,11 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
+// Import the request validation classes
+use App\Http\Requests\StoreEquivalenceMatchRequest;
+use App\Http\Requests\UpdateEquivalenceMatchRequest;
+
 use Throwable;
 
 class EquivalenceMatchController extends Controller
@@ -46,13 +51,51 @@ class EquivalenceMatchController extends Controller
         }
     }
 
-    public function store(Request $request)
-    {
+public function store(StoreEquivalenceMatchRequest $request)
+{
+    try {
+        $validated = $request->validated();
+
+        $duplicateExists = DB::table('equivalence_matches')
+            ->where('own_product_id', $validated['own_product_id'])
+            ->where('competitor_product_id', $validated['competitor_product_id'])
+            ->exists();
+
+        if ($duplicateExists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'This equivalence match already exists.',
+            ], 409);
+        }
+
+        $matchId = DB::table('equivalence_matches')->insertGetId([
+            'own_product_id' => $validated['own_product_id'],
+            'competitor_product_id' => $validated['competitor_product_id'],
+            'match_type' => $validated['match_type'],
+            'gama' => $validated['gama'],
+            'technical_segmentation' => $validated['technical_segmentation'],
+            'strategic_analysis' => $validated['strategic_analysis'],
+            'priority' => $validated['priority'],
+            'is_active' => $validated['is_active'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         return response()->json([
-            'status' => 'pending',
-            'message' => 'Equivalence match creation endpoint not implemented yet.',
-        ], 501);
+            'status' => 'success',
+            'message' => 'Equivalence match created successfully.',
+            'data' => [
+                'id' => $matchId,
+            ],
+        ], 201);
+    } catch (Throwable $exception) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Unexpected error creating equivalence match.',
+            'debug' => $exception->getMessage(),
+        ], 500);
     }
+}
 
     public function show(string $id)
     {
@@ -98,19 +141,92 @@ class EquivalenceMatchController extends Controller
         }
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateEquivalenceMatchRequest $request, string $id)
     {
-        return response()->json([
-            'status' => 'pending',
-            'message' => 'Equivalence match update endpoint not implemented yet.',
-        ], 501);
+        try {
+            $validated = $request->validated();
+
+            $matchExists = DB::table('equivalence_matches')
+                ->where('id', $id)
+                ->exists();
+
+            if (!$matchExists) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Equivalence match not found.',
+                ], 404);
+            }
+
+            $duplicateExists = DB::table('equivalence_matches')
+                ->where('own_product_id', $validated['own_product_id'])
+                ->where('competitor_product_id', $validated['competitor_product_id'])
+                ->where('id', '!=', $id)
+                ->exists();
+
+            if ($duplicateExists) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Another equivalence match with these products already exists.',
+                ], 409);
+            }
+
+            DB::table('equivalence_matches')
+                ->where('id', $id)
+                ->update([
+                    'own_product_id' => $validated['own_product_id'],
+                    'competitor_product_id' => $validated['competitor_product_id'],
+                    'match_type' => $validated['match_type'],
+                    'gama' => $validated['gama'],
+                    'technical_segmentation' => $validated['technical_segmentation'],
+                    'strategic_analysis' => $validated['strategic_analysis'],
+                    'priority' => $validated['priority'],
+                    'is_active' => $validated['is_active'],
+                    'updated_at' => now(),
+                ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Equivalence match updated successfully.',
+            ], 200);
+        } catch (Throwable $exception) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unexpected error updating equivalence match.',
+                'debug' => $exception->getMessage(),
+            ], 500);
+        }
     }
 
     public function destroy(string $id)
     {
+    try {
+        $match = DB::table('equivalence_matches')
+            ->where('id', $id)
+            ->first();
+
+        if (!$match) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Equivalence match not found.',
+            ], 404);
+        }
+
+        DB::table('equivalence_matches')
+            ->where('id', $id)
+            ->update([
+                'is_active' => false,
+                'updated_at' => now(),
+            ]);
+
         return response()->json([
-            'status' => 'pending',
-            'message' => 'Equivalence match delete endpoint not implemented yet.',
-        ], 501);
+            'status' => 'success',
+            'message' => 'Equivalence match deactivated successfully.',
+        ], 200);
+    } catch (Throwable $exception) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Unexpected error deactivating equivalence match.',
+            'debug' => $exception->getMessage(),
+        ], 500);
     }
 }

@@ -5,6 +5,11 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
+// Import the request validation classes
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+
 use Throwable;
 
 class ProductController extends Controller
@@ -59,13 +64,62 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
+public function store(StoreProductRequest $request)
+{
+    try {
+        $validated = $request->validated();
+
+        $productId = DB::transaction(function () use ($validated) {
+            $productId = DB::table('products')->insertGetId([
+                'brand_id' => $validated['brand_id'],
+                'sku' => $validated['sku'],
+                'erp_name' => $validated['erp_name'],
+                'technical_name' => $validated['technical_name'],
+                'guarantee_years' => $validated['guarantee_years'] ?? 0,
+                'volume_liters' => $validated['volume_liters'],
+                'base_type' => $validated['base_type'] ?? null,
+                'is_fibrated' => $validated['is_fibrated'],
+                'requires_separate_primer' => $validated['requires_separate_primer'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('product_prices')->insert([
+                'product_id' => $productId,
+                'price' => $validated['price'],
+                'currency' => strtoupper($validated['currency']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('product_performances')->insert([
+                'product_id' => $productId,
+                'surface_type' => $validated['surface_type'] ?? 'general',
+                'consumption_per_m2' => $validated['consumption_per_m2'],
+                'min_coverage_m2' => $validated['min_coverage_m2'],
+                'max_coverage_m2' => $validated['max_coverage_m2'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return $productId;
+        });
+
         return response()->json([
-            'status' => 'pending',
-            'message' => 'Product creation endpoint not implemented yet.',
-        ], 501);
+            'status' => 'success',
+            'message' => 'Product created successfully.',
+            'data' => [
+                'id' => $productId,
+            ],
+        ], 201);
+    } catch (Throwable $exception) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Unexpected error creating product.',
+            'debug' => $exception->getMessage(),
+        ], 500);
     }
+}
 
     /**
      * Display the specified resource.
@@ -122,13 +176,73 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
+public function update(UpdateProductRequest $request, string $id)
+{
+    try {
+        $validated = $request->validated();
+
+        $productExists = DB::table('products')
+            ->where('id', $id)
+            ->exists();
+
+        if (!$productExists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Product not found.',
+            ], 404);
+        }
+
+        DB::transaction(function () use ($validated, $id) {
+            DB::table('products')
+                ->where('id', $id)
+                ->update([
+                    'brand_id' => $validated['brand_id'],
+                    'sku' => $validated['sku'],
+                    'erp_name' => $validated['erp_name'],
+                    'technical_name' => $validated['technical_name'],
+                    'guarantee_years' => $validated['guarantee_years'] ?? 0,
+                    'volume_liters' => $validated['volume_liters'],
+                    'base_type' => $validated['base_type'] ?? null,
+                    'is_fibrated' => $validated['is_fibrated'],
+                    'requires_separate_primer' => $validated['requires_separate_primer'],
+                    'updated_at' => now(),
+                ]);
+
+            DB::table('product_prices')->updateOrInsert(
+                ['product_id' => $id],
+                [
+                    'price' => $validated['price'],
+                    'currency' => strtoupper($validated['currency']),
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+
+            DB::table('product_performances')->updateOrInsert(
+                ['product_id' => $id],
+                [
+                    'surface_type' => $validated['surface_type'] ?? 'general',
+                    'consumption_per_m2' => $validated['consumption_per_m2'],
+                    'min_coverage_m2' => $validated['min_coverage_m2'],
+                    'max_coverage_m2' => $validated['max_coverage_m2'],
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+        });
+
         return response()->json([
-            'status' => 'pending',
-            'message' => 'Product update endpoint not implemented yet.',
-        ], 501);
+            'status' => 'success',
+            'message' => 'Product updated successfully.',
+        ], 200);
+    } catch (Throwable $exception) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Unexpected error updating product.',
+            'debug' => $exception->getMessage(),
+        ], 500);
     }
+}
 
     public function destroy(string $id)
     {
