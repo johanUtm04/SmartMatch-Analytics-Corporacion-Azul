@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAdminData } from "./admin/hooks/useAdminData";
 
 type Brand = {
   id: number;
@@ -42,64 +43,15 @@ type EquivalenceMatch = {
 };
 
 export default function AdminDashboard() {
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [matches, setMatches] = useState<EquivalenceMatch[]>([]);
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  async function loadAdminData() {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [brandsResponse, productsResponse, matchesResponse] =
-        await Promise.all([
-          fetch("/api/v1/admin/brands", {
-            headers: { Accept: "application/json" },
-          }),
-          fetch("/api/v1/admin/products", {
-            headers: { Accept: "application/json" },
-          }),
-          fetch("/api/v1/admin/equivalence-matches", {
-            headers: { Accept: "application/json" },
-          }),
-        ]);
-
-      const brandsJson = await brandsResponse.json();
-      const productsJson = await productsResponse.json();
-      const matchesJson = await matchesResponse.json();
-
-      if (!brandsResponse.ok || brandsJson.status === "error") {
-        throw new Error(brandsJson.message ?? "Could not load brands.");
-      }
-
-      if (!productsResponse.ok || productsJson.status === "error") {
-        throw new Error(productsJson.message ?? "Could not load products.");
-      }
-
-      if (!matchesResponse.ok || matchesJson.status === "error") {
-        throw new Error(matchesJson.message ?? "Could not load matches.");
-      }
-
-      setBrands(brandsJson.data);
-      setProducts(productsJson.data);
-      setMatches(matchesJson.data);
-    } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unexpected admin loading error."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadAdminData();
-  }, []);
+  const {
+    brands,
+    products,
+    matches,
+    loading,
+    error,
+    refetch,
+  } = useAdminData();
 
   return (
     <main className="min-h-screen bg-slate-100 p-6">
@@ -131,7 +83,7 @@ export default function AdminDashboard() {
             title="Admin loading error"
             message={error}
             actionLabel="Try again"
-            onAction={loadAdminData}
+            onAction={refetch}
           />
         )}
 
