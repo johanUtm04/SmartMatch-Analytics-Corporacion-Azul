@@ -5,7 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
-class SmartMatchService
+class SmartMatchService     
 {
     /**
      * Calculate a SmartMatch battle using an equivalence match ID.
