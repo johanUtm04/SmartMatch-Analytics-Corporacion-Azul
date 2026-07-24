@@ -22,6 +22,17 @@ export default function SmartMatchHeader() {
           marketing, ventas, pricing y estrategia de producto.
         </p>
       </div>
+
+      <div className="flex-shrink-0 self-start md:self-center">
+        <button
+          type="button"
+          onClick={() => console.log('Action clicked')}
+          className="rounded-lg bg-[#1B2A56] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#152144] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B2A56]"
+        >
+          Ir a Admin dashboard
+        </button>
+      </div>
+
     </header>
   );
 }
