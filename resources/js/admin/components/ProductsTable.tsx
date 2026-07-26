@@ -18,6 +18,7 @@ export default function ProductsTable({ products }: ProductsTableProps) {
 
         <button
           type="button"
+          onClick={() => { window.location.href = '/produ'; }}
           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
         >
           Nuevo producto
