@@ -4,7 +4,7 @@ export default function SmartMatchHeader() {
       <img
         src="images/logos/logo-corporacion-azul.png"
         alt="Corporación Azul"
-        className="h-14 w-30 flex-shrink-0 object-contain"
+        className="h-40 w-40 flex-shrink-0 object-contain"
       />
 
       <div>
