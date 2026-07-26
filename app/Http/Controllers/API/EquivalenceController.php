@@ -110,4 +110,31 @@ class EquivalenceController extends Controller
             ], 500);
         }
     }
+
+    public function destroy($id)
+    {
+        try {
+            $match = DB::table('equivalence_matches')->where('id', $id)->first();
+
+            if (!$match) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Equivalence match not found.',
+                ], 404);
+            }
+
+            DB::table('equivalence_matches')->where('id', $id)->update(['is_active' => false]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Equivalence match deactivated successfully.',
+            ], 200);
+        } catch (Throwable $exception) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unexpected error deactivating SmartMatch match.',
+                'debug' => $exception->getMessage(),
+            ], 500);
+        }
+    }
 }
