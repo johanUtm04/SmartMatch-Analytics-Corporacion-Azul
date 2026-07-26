@@ -21,10 +21,30 @@ export default function MatchSelector({
     <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-[#1B2A56]">
-            Selecciona una comparación
-          </h2>
-
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-[#1B2A56]">
+              Selecciona una comparación
+            </h2>
+            
+            {/* The Trigger Button - Note the capital T in popoverTarget */}
+            <button
+              type="button"
+              popoverTarget="product-list-tip" 
+              className="cursor-pointer text-slate-400 hover:text-[#1B2A56] text-sm flex items-center justify-center w-5 h-5 rounded-full border border-slate-300 bg-white shadow-sm"
+            >
+              ?
+            </button>
+          </div>
+        <div
+          id="product-list-tip"
+          popover="auto"
+          className="m-0 mt-2 p-4 max-w-xs bg-white rounded-lg shadow-xl border border-slate-200 text-sm text-slate-600"
+        >
+          <h4 className="font-semibold text-[#1B2A56] mb-1">Guía de Comparación</h4>
+          <p>
+            Selecciona dos marcas o productos equivalentes del listado para calcular la tasa de canibalización y el margen cruzado.
+          </p>
+        </div>
           <p className="text-sm text-slate-500">
             Elige uno de los cruces de productos activos en la base de datos.
           </p>
