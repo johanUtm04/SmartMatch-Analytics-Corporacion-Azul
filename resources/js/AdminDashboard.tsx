@@ -16,7 +16,14 @@ export default function AdminDashboard() {
   return (
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-6">
+      <header className="mb-6 flex flex-col md:flex-row items-start md:items-center gap-6 border-b-4 border-[#C8102E] pb-6">
+        <img
+          src="images/cruzazulito/cruzazulito.gif"
+          alt="Corporación Azul"
+          className="h-24 w-auto flex-shrink-0 object-contain"
+        />
+
+        <div className="flex-1">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-700">
             SmartMatch Admin
           </p>
@@ -29,16 +36,18 @@ export default function AdminDashboard() {
             Manage products, brands, prices, performance data, and equivalence
             matches used by the SmartMatch commercial dashboard.
           </p>
-          <div className="flex-shrink-0 self-start md:self-center">
-            <button
-              type="button"
-              onClick={() => { window.location.href = '/dashboard'; }}
-                className="cursor-pointer rounded-lg bg-[#1B2A56] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#152144] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B2A56]"
-              >
-              Ir a Dashboard
-            </button>
-          </div>
-        </header>
+        </div>
+
+        <div className="w-full md:w-auto flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => { window.location.href = '/dashboard'; }}
+            className="w-full md:w-auto cursor-pointer rounded-lg bg-[#1B2A56] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#152144] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B2A56]"
+          >
+            Ir a Dashboard
+          </button>
+        </div>
+      </header>
 
         {loading && (
           <StatusCard
