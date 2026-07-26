@@ -33,8 +33,8 @@ export default function AdminDashboard() {
             <button
               type="button"
               onClick={() => { window.location.href = '/dashboard'; }}
-              className="rounded-lg bg-[#1B2A56] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#152144] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B2A56]"
-            >
+                className="cursor-pointer rounded-lg bg-[#1B2A56] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#152144] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B2A56]"
+              >
               Ir a Dashboard
             </button>
           </div>
