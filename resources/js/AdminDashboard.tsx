@@ -1,7 +1,7 @@
 import ProductsTable from "./admin/components/ProductsTable";
+import {ProductModal} from "./components/products/ProductModal"
 import MatchesTable from "./admin/components/MatchesTable";
 import { useAdminData } from "./admin/hooks/useAdminData";
-
 
 export default function AdminDashboard() {
   const {

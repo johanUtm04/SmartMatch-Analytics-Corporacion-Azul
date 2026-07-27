@@ -1,11 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\EquivalenceController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/{any}', function () {
-    return view('dashboard'); 
-})->where('any', '^(?!api).*$'); //
+Route::get('/dashboard', function () {
+    return view('dashboard');
+});
+
+Route::get('/admin', function () {
+    return view('admin');
+});
