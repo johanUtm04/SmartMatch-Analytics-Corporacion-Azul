@@ -22,6 +22,12 @@ const initialFormState: ProductFormData = {
   base_type: '',
   is_fibrated: false,
   requires_separate_primer: false,
+  price: '',
+  currency: '',
+  surface_type: '',
+  consumption_per_m2: '',
+  min_coverage_m2: '',
+  max_coverage_m2: '',
 };
 
 export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit }) => {
@@ -94,6 +100,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
                     brand_id: Number(formData.brand_id),
                     guarantee_years: Number(formData.guarantee_years),
                     volume_liters: Number(formData.volume_liters),
+                    price: Number(formData.price),
+                    consumption_per_m2: Number(formData.consumption_per_m2),
+                    min_coverage_m2: Number(formData.min_coverage_m2),
+                    max_coverage_m2: Number(formData.max_coverage_m2),
                 }),
             });
             if (!response.ok) {
@@ -113,9 +123,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
         }
     };
 
-    return (
+return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg">
+      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">
         <h2 className="mb-4 text-xl font-bold text-gray-800">Nuevo Producto</h2>
 
         {error && (
@@ -123,8 +133,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
             {error}
           </div>
         )}
-        {/* onSubmit is a React event listener. It intercepts form submissions
-        and runs the custom handleSubmit */}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -132,9 +141,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
               <input
                 type="number"
                 name="brand_id"
-                // This turns the input into a controlled component,
-                // Tells this specific input field to read and display the current string
-                // from the component's form state object
                 value={formData.brand_id}
                 onChange={handleChange}
                 required
@@ -203,7 +209,74 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
               />
             </div>
 
-            <div className="col-span-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Precio</label>
+              <input
+                type="number"
+                step="0.01"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                required
+                className="mt-1 w-full rounded border p-2"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Tipo de Superficie</label>
+              <select
+                name="surface_type"
+                value={formData.surface_type}
+                onChange={handleChange}
+                required
+                className="mt-1 w-full rounded border p-2 bg-white"
+              >
+                <option value="liso">Liso</option>
+                <option value="rugoso">Rugoso</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Consumo por m²</label>
+              <input
+                type="number"
+                step="0.01"
+                name="consumption_per_m2"
+                value={formData.consumption_per_m2}
+                onChange={handleChange}
+                required
+                className="mt-1 w-full rounded border p-2"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Cobertura mínima (m²)</label>
+              <input
+                type="number"
+                step="0.01"
+                name="min_coverage_m2"
+                value={formData.min_coverage_m2}
+                onChange={handleChange}
+                required
+                className="mt-1 w-full rounded border p-2"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Cobertura máxima (m²)</label>
+              <input
+                type="number"
+                step="0.01"
+                name="max_coverage_m2"
+                value={formData.max_coverage_m2}
+                onChange={handleChange}
+                required
+                className="mt-1 w-full rounded border p-2"
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700">Base Type</label>
               <input
                 type="text"
@@ -221,8 +294,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
               <input
                 type="checkbox"
                 name="is_fibrated"
-                // A specialized HTML/React property used explicitly for 
-                // checkboxes instead of the standard value property
                 checked={formData.is_fibrated}
                 onChange={handleChange}
                 className="mr-2"
@@ -245,8 +316,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
           <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
-              //A React event listener to capture mouse clicks or screen taps
-              //to hide, close, or dismiss the current view or modal popup window
               onClick={onClose}
               className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
             >
@@ -254,12 +323,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
             </button>
             <button
               type="submit"
-              //An HTML/React property used on buttons, inputs, and form fields
-              // to toggle wheter a user can interact with them
               disabled={loading}
               className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {/* ok */}
               {loading ? 'Saving...' : 'Save Product'}
             </button>
           </div>
@@ -267,4 +333,5 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
       </div>
     </div>
   );
+
 };
