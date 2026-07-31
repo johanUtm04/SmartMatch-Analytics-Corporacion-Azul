@@ -1,11 +1,13 @@
 import { useState } from "react";
 import ProductsTable from "./admin/components/ProductsTable";
+// import ProductModal from "./admin/components/products/ProductModal";
 import MatchesTable from "./admin/components/MatchesTable";
 import { useAdminData } from "./admin/hooks/useAdminData";
 import {
   deactivateAdminEquivalenceMatch,
   restoreAdminEquivalenceMatch,
 } from "./admin/services/adminApi";
+
 
 export default function AdminDashboard() {
   const { brands, products, matches, loading, error, refetch } = useAdminData();
@@ -63,8 +65,7 @@ export default function AdminDashboard() {
   return (
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-7xl">
-      <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div>
+        <header className="mb-6">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-700">
             SmartMatch Admin
           </p>
@@ -77,15 +78,7 @@ export default function AdminDashboard() {
             Manage products, brands, prices, performance data, and equivalence
             matches used by the SmartMatch commercial dashboard.
           </p>
-        </div>
-
-        <a
-          href="/dashboard"
-          className="inline-flex shrink-0 items-center justify-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
-        >
-          Ir al dashboard
-        </a>
-      </header>
+        </header>
 
         {loading && (
           <StatusCard

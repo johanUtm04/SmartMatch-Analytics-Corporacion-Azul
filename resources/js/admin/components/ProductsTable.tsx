@@ -1,10 +1,15 @@
+import React, { useState } from 'react';
 import type { AdminProduct } from "../types/admin";
-
+import { ProductModal } from '../../components/products/ProductModal';
 type ProductsTableProps = {
   products: AdminProduct[];
 };
 
 export default function ProductsTable({ products }: ProductsTableProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const handleProductCreated = () => {
+    // Reload your products list state here
+  };
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -16,12 +21,20 @@ export default function ProductsTable({ products }: ProductsTableProps) {
           </p>
         </div>
 
+        <div> 
         <button
-          type="button"
+          onClick={()=>setIsModalOpen(true)}
           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
         >
-          Nuevo producto
+        Nuevo producto
         </button>
+
+          <ProductModal 
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleProductCreated}
+          />
+          </div>
       </div>
 
       {products.length === 0 ? (

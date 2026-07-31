@@ -19,4 +19,8 @@ Route::prefix('/v1/admin')->group(function () {
 
     Route::patch('/equivalence-matches/{id}/restore', [EquivalenceMatchController::class, 'restore']);
     Route::patch('/products/{id}/restore', [ProductController::class, 'restore']);
+
+    //Desactive endpoint for the SmartMatch analytics matrix
+    Route::delete('/equivalence-matches/{id}', [EquivalenceMatchController::class, 'destroy']);
+    
 });
