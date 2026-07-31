@@ -45,3 +45,51 @@ export function getAdminEquivalenceMatches(signal?: AbortSignal) {
     signal
   );
 }
+
+export async function deactivateAdminEquivalenceMatch(
+  matchId: number
+): Promise<void> {
+  const response = await fetch(
+    `/api/v1/admin/equivalence-matches/${matchId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
+
+  const json = await response.json();
+
+  if (!response.ok || json.status === "error") {
+    throw new Error(
+      "message" in json
+        ? json.message
+        : "Could not deactivate equivalence match."
+    );
+  }
+}
+
+export async function restoreAdminEquivalenceMatch(
+  matchId: number
+): Promise<void> {
+  const response = await fetch(
+    `/api/v1/admin/equivalence-matches/${matchId}/restore`,
+    {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
+
+  const json = await response.json();
+
+  if (!response.ok || json.status === "error") {
+    throw new Error(
+      "message" in json
+        ? json.message
+        : "Could not restore equivalence match."
+    );
+  }
+}

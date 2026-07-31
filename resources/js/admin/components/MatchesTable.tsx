@@ -2,9 +2,17 @@ import type { AdminEquivalenceMatch } from "../types/admin";
 
 type MatchesTableProps = {
   matches: AdminEquivalenceMatch[];
+  onDeactivate: (matchId: number) => void;
+  onRestore: (matchId: number) => void;
+  actionLoadingId?: number | null;
 };
 
-export default function MatchesTable({ matches }: MatchesTableProps) {
+export default function MatchesTable({
+    matches,
+    onDeactivate,
+    onRestore,
+    actionLoadingId = null,
+  }: MatchesTableProps) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -46,7 +54,13 @@ export default function MatchesTable({ matches }: MatchesTableProps) {
 
             <tbody>
               {matches.map((match) => (
-                <MatchRow key={match.id} match={match} />
+                <MatchRow
+                  key={match.id}
+                  match={match}
+                  onDeactivate={onDeactivate}
+                  onRestore={onRestore}
+                  isLoading={actionLoadingId === match.id}
+                />
               ))}
             </tbody>
           </table>
@@ -56,7 +70,17 @@ export default function MatchesTable({ matches }: MatchesTableProps) {
   );
 }
 
-function MatchRow({ match }: { match: AdminEquivalenceMatch }) {
+function MatchRow({
+  match,
+  onDeactivate,
+  onRestore,
+  isLoading,
+}: {
+  match: AdminEquivalenceMatch;
+  onDeactivate: (matchId: number) => void;
+  onRestore: (matchId: number) => void;
+  isLoading: boolean;
+}) {
   return (
     <tr className="rounded-xl bg-slate-50 align-top">
       <td className="px-3 py-3">
@@ -98,7 +122,8 @@ function MatchRow({ match }: { match: AdminEquivalenceMatch }) {
         <div className="flex justify-end gap-2">
           <button
             type="button"
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={isLoading}
           >
             Editar
           </button>
@@ -106,16 +131,20 @@ function MatchRow({ match }: { match: AdminEquivalenceMatch }) {
           {match.is_active ? (
             <button
               type="button"
-              className="rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-50"
+              onClick={() => onDeactivate(match.id)}
+              disabled={isLoading}
+              className="rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Desactivar
+              {isLoading ? "Procesando..." : "Desactivar"}
             </button>
           ) : (
             <button
               type="button"
-              className="rounded-lg border border-green-200 px-3 py-1.5 text-xs font-semibold text-green-700 transition hover:bg-green-50"
+              onClick={() => onRestore(match.id)}
+              disabled={isLoading}
+              className="rounded-lg border border-green-200 px-3 py-1.5 text-xs font-semibold text-green-700 transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Reactivar
+              {isLoading ? "Procesando..." : "Reactivar"}
             </button>
           )}
         </div>

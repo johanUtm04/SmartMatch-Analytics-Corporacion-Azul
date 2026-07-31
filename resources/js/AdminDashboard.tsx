@@ -1,22 +1,70 @@
+import { useState } from "react";
 import ProductsTable from "./admin/components/ProductsTable";
 import MatchesTable from "./admin/components/MatchesTable";
 import { useAdminData } from "./admin/hooks/useAdminData";
-
+import {
+  deactivateAdminEquivalenceMatch,
+  restoreAdminEquivalenceMatch,
+} from "./admin/services/adminApi";
 
 export default function AdminDashboard() {
-  const {
-    brands,
-    products,
-    matches,
-    loading,
-    error,
-    refetch,
-  } = useAdminData();
+  const { brands, products, matches, loading, error, refetch } = useAdminData();
+
+  const [matchActionLoadingId, setMatchActionLoadingId] = useState<number | null>(
+    null
+  );
+
+  const handleDeactivateMatch = async (matchId: number) => {
+    const confirmed = window.confirm(
+      "¿Seguro que deseas desactivar esta comparación? Ya no aparecerá en el selector del dashboard comercial."
+    );
+
+    if (!confirmed) return;
+
+    setMatchActionLoadingId(matchId);
+
+    try {
+      await deactivateAdminEquivalenceMatch(matchId);
+      await refetch();
+    } catch (requestError) {
+      alert(
+        requestError instanceof Error
+          ? requestError.message
+          : "No se pudo desactivar la comparación."
+      );
+    } finally {
+      setMatchActionLoadingId(null);
+    }
+  };
+
+  const handleRestoreMatch = async (matchId: number) => {
+    const confirmed = window.confirm(
+      "¿Seguro que deseas reactivar esta comparación? Volverá a aparecer en el selector del dashboard comercial."
+    );
+
+    if (!confirmed) return;
+
+    setMatchActionLoadingId(matchId);
+
+    try {
+      await restoreAdminEquivalenceMatch(matchId);
+      await refetch();
+    } catch (requestError) {
+      alert(
+        requestError instanceof Error
+          ? requestError.message
+          : "No se pudo reactivar la comparación."
+      );
+    } finally {
+      setMatchActionLoadingId(null);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-6">
+      <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-700">
             SmartMatch Admin
           </p>
@@ -29,7 +77,15 @@ export default function AdminDashboard() {
             Manage products, brands, prices, performance data, and equivalence
             matches used by the SmartMatch commercial dashboard.
           </p>
-        </header>
+        </div>
+
+        <a
+          href="/dashboard"
+          className="inline-flex shrink-0 items-center justify-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
+        >
+          Ir al dashboard
+        </a>
+      </header>
 
         {loading && (
           <StatusCard
@@ -57,7 +113,13 @@ export default function AdminDashboard() {
 
             <section className="grid grid-cols-1 gap-6">
               <ProductsTable products={products} />
-              <MatchesTable matches={matches} />
+
+              <MatchesTable
+                matches={matches}
+                onDeactivate={handleDeactivateMatch}
+                onRestore={handleRestoreMatch}
+                actionLoadingId={matchActionLoadingId}
+              />
             </section>
           </>
         )}
@@ -106,15 +168,4 @@ function StatusCard({
       )}
     </div>
   );
-}
-
-function formatNumber(value: number | null | undefined) {
-  if (value === null || value === undefined) {
-    return "0";
-  }
-
-  return value.toLocaleString("es-MX", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
 }

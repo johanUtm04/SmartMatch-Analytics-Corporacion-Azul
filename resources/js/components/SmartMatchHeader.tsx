@@ -22,6 +22,12 @@ export default function SmartMatchHeader() {
           marketing, ventas, pricing y estrategia de producto.
         </p>
       </div>
+      <a
+        href="/admin"
+        className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
+      >
+        Ir al administrador
+      </a>
     </header>
   );
 }
