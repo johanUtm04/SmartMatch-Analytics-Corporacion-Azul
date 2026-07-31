@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ProductsTable from "./admin/components/ProductsTable";
-// import ProductModal from "./admin/components/products/ProductModal";
+import ProductModal from "././components/products/ProductModal";
 import MatchesTable from "./admin/components/MatchesTable";
 import { useAdminData } from "./admin/hooks/useAdminData";
 import {
@@ -114,8 +114,11 @@ export default function AdminDashboard() {
             </section>
 
             <section className="grid grid-cols-1 gap-6">
-              <ProductsTable products={products} />
-
+              <ProductsTable
+                products={products}
+                brands={brands}
+                onProductCreated={refetch}
+              />
               <MatchesTable
                 matches={matches}
                 onDeactivate={handleDeactivateMatch}

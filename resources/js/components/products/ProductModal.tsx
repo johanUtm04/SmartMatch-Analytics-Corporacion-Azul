@@ -1,337 +1,501 @@
+import { useState } from "react";
+import type { ProductFormData } from "../../types/ProductModal";
 
-import React, { useState } from 'react'; //import react component
-//import type(a keyword used to define the shape, structure, and behavior of data)
-import { ProductFormData } from '../../types/ProductModal';
+type Brand = {
+  id: number;
+  name: string;
+};
 
-//in react and ts, is a keyword used to 
-//a contract or bluepirnt for the structure of an object
 interface ProductModalProps {
   isOpen: boolean;
+  brands: Brand[];
   onClose: () => void;
   onSubmit: (data: ProductFormData) => void;
 }
 
-//const declares variables whose refrence or value cannot be reassigned after initialization
-const initialFormState: ProductFormData = {
-  brand_id: '',
-  sku: '',
-  erp_name: '',
-  technical_name: '',
-  guarantee_years: '',
-  volume_liters: '',
-  base_type: '',
-  is_fibrated: false,
-  requires_separate_primer: false,
-  price: '',
-  currency: '',
-  surface_type: '',
-  consumption_per_m2: '',
-  min_coverage_m2: '',
-  max_coverage_m2: '',
+type LaravelValidationResponse = {
+  message?: string;
+  errors?: Record<string, string[]>;
 };
 
-export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onSubmit }) => {
-    //const to restart the form data to the initial state
-    const [formData, setFormData] = useState<ProductFormData>(initialFormState);
-    //const to manage the loading state of the form
-    const [loading, setLoading] = useState(false);
-    //const to manage the error state of the form
-    const [error, setError] = useState<string | null>(null);
+const initialFormState: ProductFormData = {
+  brand_id: "",
+  sku: "",
+  erp_name: "",
+  technical_name: "",
+  guarantee_years: "",
+  volume_liters: "",
+  base_type: "",
+  is_fibrated: false,
+  requires_separate_primer: false,
+  price: "",
+  currency: "MXN",
+  surface_type: "general",
+  consumption_per_m2: "",
+  min_coverage_m2: "",
+  max_coverage_m2: "",
+};
 
-    //if the modal isn't open, return null to not render the modal
-    if (!isOpen) return null;
+export default function ProductModal({
+  isOpen,
+  brands,
+  onClose,
+  onSubmit,
+}: ProductModalProps) {
+  const [formData, setFormData] =
+    useState<ProductFormData>(initialFormState);
 
-    //funcion named handleChange is the standar, community-accepted naming convention 
-    //for a function that captures and processes user input from form elements
-    // e is shorthand for event
-    //React.ChangeEvent is a specific generic type provied by React, It tells TypeScript that this function handles an event where a elemnt's value chanes 
-    //HTMLInputElement is a built-in browser type representing text inputs, checkboxes, and radio buttons
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    {
-        //target is a property on the event that refrences the exact HTML element
-        //(the specific input or select element)
-        const { name, value, type } = e.target;
-        const isCheckbox = type === 'checkbox';
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-        //prev pdeclares a parameter placeholder representing the previous, 
-            //current state data safely before this update happens.
-        setFormData((prev)=> ({
-            ...prev,
-            //evaluate the variable "name" string dynamically as the object key 
-                //e.g. if name is 'email', this compiles to email
-                //isCheckbox: The boolean flag variable from const... 
-                // condition ? expression_if_true : expression_if_false
-                // isCheckbox ? checkbox = checked : 'email'
-            [name]: isCheckbox ? (e.target as HTMLInputElement).checked : value,
-        }));
+  if (!isOpen) {
+    return null;
+  }
+
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = event.target;
+
+    const fieldValue =
+      type === "checkbox"
+        ? (event.target as HTMLInputElement).checked
+        : value;
+
+    setFormData((current) => ({
+      ...current,
+      [name]: fieldValue,
+    }));
+  };
+
+  const handleClose = () => {
+    if (loading) {
+      return;
+    }
+
+    setFormData(initialFormState);
+    setError(null);
+    onClose();
+  };
+
+  const handleLoadExample = () => {
+  const cemixBrand = brands.find(
+    (brand) => brand.name.toLowerCase() === "cemix"
+  );
+
+  setFormData({
+    brand_id: cemixBrand ? cemixBrand.id : "",
+    sku: "CX-EJEMPLO-19L",
+    erp_name: "CEMIX PRODUCTO DE EJEMPLO 19 LITROS",
+    technical_name: "PRODUCTO IMPERMEABILIZANTE DE EJEMPLO",
+    guarantee_years: 5,
+    volume_liters: 19,
+    base_type: "ACRÍLICA",
+    is_fibrated: false,
+    requires_separate_primer: false,
+    price: 1420,
+    currency: "MXN",
+    surface_type: "general",
+    consumption_per_m2: 1,
+    min_coverage_m2: 19,
+    max_coverage_m2: 19,
+  });
+
+  setError(null);
+};
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    setLoading(true);
+    setError(null);
+
+    const payload = {
+      ...formData,
+      brand_id: Number(formData.brand_id),
+      guarantee_years:
+        formData.guarantee_years === ""
+          ? null
+          : Number(formData.guarantee_years),
+      volume_liters: Number(formData.volume_liters),
+      price: Number(formData.price),
+      currency: formData.currency.toUpperCase(),
+      consumption_per_m2: Number(formData.consumption_per_m2),
+      min_coverage_m2: Number(formData.min_coverage_m2),
+      max_coverage_m2: Number(formData.max_coverage_m2),
     };
 
-    //handleSubmit handles the form submit
-    //async mark the functions as asynchronous, this allows you to use the 
-    //await keyword inside it to pause execution for networks requests 
-    //without freezing the browser
-        //takes one argument named e and tells typeScript that this function
-        //handles the browser
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
+    try {
+      const response = await fetch("/api/v1/admin/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-        try {
-            //const response = await
-            //creates a variable 'response' to hold the network outcome
-            //fetch calls the built-in browser API to send a request 
-            //to that specific API path
-            const response = await fetch ('/api/v1/admin/products', {
-                //Configure the request as a POST method, telling the 
-                //backend server
-                //that i want create or save new data
-                method: 'POST',
-                //Provides metadata about the request
-                headers :{
-                    'Content-Type' : 'application/json',
-                    'Accept':'application/json',
-                },
-                //converts a js object into a flat
-                body: JSON.stringify({
-                    //Unpacks all the existing value pairs from the 
-                    //state object 
-                    ...formData,
-                    brand_id: Number(formData.brand_id),
-                    guarantee_years: Number(formData.guarantee_years),
-                    volume_liters: Number(formData.volume_liters),
-                    price: Number(formData.price),
-                    consumption_per_m2: Number(formData.consumption_per_m2),
-                    min_coverage_m2: Number(formData.min_coverage_m2),
-                    max_coverage_m2: Number(formData.max_coverage_m2),
-                }),
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error creating product');
-            }
-            //resets the form inputs back to blank after successful database save
-            setFormData(initialFormState);
-            //Fires a callback from the parent components, sending the newly 
-            //create data upward to update tables or lists
-            onSubmit(formData);
-            onClose();
-        } catch (err: any) {
-            setError(err.message);            
-        } finally{
-            setLoading(false);
+      const responseData =
+        (await response.json()) as LaravelValidationResponse;
+
+      if (!response.ok) {
+        const firstValidationError = responseData.errors
+          ? Object.values(responseData.errors).flat()[0]
+          : null;
+
+        throw new Error(
+          firstValidationError ??
+            responseData.message ??
+            "No se pudo crear el producto."
+        );
+      }
+
+      onSubmit(formData);
+      setFormData(initialFormState);
+      onClose();
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Ocurrió un error inesperado al guardar el producto."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="new-product-title"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          handleClose();
         }
-    };
+      }}
+    >
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+      <div className="mb-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2
+              id="new-product-title"
+              className="text-2xl font-bold text-slate-900"
+            >
+              Nuevo producto
+            </h2>
 
-return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">
-        <h2 className="mb-4 text-xl font-bold text-gray-800">Nuevo Producto</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Registra los datos tal como aparecen en el ERP, ficha técnica y lista de
+              precios.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleLoadExample}
+            disabled={loading}
+            className="shrink-0 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Cargar ejemplo
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
+        <p className="text-sm font-semibold text-blue-900">
+          Ejemplo de llenado
+        </p>
+
+        <p className="mt-1 text-sm text-blue-700">
+          SKU: CX-IMPH-ECO-5Y-19L · Volumen: 19 L · Precio: 1420 MXN ·
+          Consumo: 1 L/m² · Cobertura: 19 m²
+        </p>
+      </div>
 
         {error && (
-          <div className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">
+          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Brand ID</label>
-              <input
-                type="number"
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField label="Marca">
+              <select
                 name="brand_id"
                 value={formData.brand_id}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full rounded border p-2"
-              />
-            </div>
+                className={inputClassName}
+              >
+                <option value="">Selecciona una marca</option>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">SKU</label>
+                {brands.map((brand) => (
+                  <option key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField label="SKU">
               <input
                 type="text"
                 name="sku"
                 value={formData.sku}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full rounded border p-2"
+                maxLength={100}
+                className={inputClassName}
+                placeholder="Ej. CX-IMPH-ECO-5Y-19L"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">ERP Name</label>
-              <input
-                type="text"
-                name="erp_name"
-                value={formData.erp_name}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded border p-2"
-              />
-            </div>
+            <FormField label="Nombre ERP">
+            <input
+              type="text"
+              name="erp_name"
+              value={formData.erp_name}
+              onChange={handleChange}
+              required
+              maxLength={255}
+              className={inputClassName}
+              placeholder="Ej. CEMIX IMPERCOOL ECOLÓGICO BLANCO 5 AÑOS"
+            />
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Technical Name</label>
-              <input
-                type="text"
-                name="technical_name"
-                value={formData.technical_name}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded border p-2"
-              />
-            </div>
+            <FormField label="Nombre técnico">
+            <input
+              type="text"
+              name="technical_name"
+              value={formData.technical_name}
+              onChange={handleChange}
+              required
+              maxLength={255}
+              className={inputClassName}
+              placeholder="Ej. CEMIX IMPERCOOL ECOLÓGICO 19 LITROS"
+            />
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Guarantee Years</label>
+            <FormField label="Años de garantía">
               <input
                 type="number"
                 name="guarantee_years"
                 value={formData.guarantee_years}
                 onChange={handleChange}
-                required
-                className="mt-1 w-full rounded border p-2"
+                min={0}
+                max={30}
+                className={inputClassName}
+                placeholder="0"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Volume (Liters)</label>
-              <input
-                type="number"
-                step="0.01"
-                name="volume_liters"
-                value={formData.volume_liters}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded border p-2"
-              />
-            </div>
+            <FormField label="Volumen en litros">
+            <input
+              type="number"
+              name="volume_liters"
+              value={formData.volume_liters}
+              onChange={handleChange}
+              required
+              min={0}
+              step="0.01"
+              className={inputClassName}
+              placeholder="Ej. 19"
+            />
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Precio</label>
-              <input
-                type="number"
-                step="0.01"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded border p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Tipo de Superficie</label>
-              <select
-                name="surface_type"
-                value={formData.surface_type}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded border p-2 bg-white"
-              >
-                <option value="liso">Liso</option>
-                <option value="rugoso">Rugoso</option>
-                <option value="general">General</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Consumo por m²</label>
-              <input
-                type="number"
-                step="0.01"
-                name="consumption_per_m2"
-                value={formData.consumption_per_m2}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded border p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Cobertura mínima (m²)</label>
-              <input
-                type="number"
-                step="0.01"
-                name="min_coverage_m2"
-                value={formData.min_coverage_m2}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded border p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Cobertura máxima (m²)</label>
-              <input
-                type="number"
-                step="0.01"
-                name="max_coverage_m2"
-                value={formData.max_coverage_m2}
-                onChange={handleChange}
-                required
-                className="mt-1 w-full rounded border p-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Base Type</label>
+            <FormField label="Tipo de base">
               <input
                 type="text"
                 name="base_type"
                 value={formData.base_type}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full rounded border p-2"
+                maxLength={255}
+                className={inputClassName}
+                placeholder="Ej. Acrílica, cementosa o asfáltica"
               />
-            </div>
+            </FormField>
+
+            <FormField label="Tipo de superficie">
+              <select
+                name="surface_type"
+                value={formData.surface_type}
+                onChange={handleChange}
+                required
+                className={inputClassName}
+              >
+                <option value="general">General</option>
+                <option value="liso">Liso</option>
+                <option value="rugoso">Rugoso</option>
+              </select>
+            </FormField>
+
+            <FormField label="Precio">
+            <input
+              type="number"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              required
+              min={0}
+              step="0.01"
+              className={inputClassName}
+              placeholder="Ej. 1420"
+            />
+            </FormField>
+
+            <FormField label="Moneda">
+              <select
+                name="currency"
+                value={formData.currency}
+                onChange={handleChange}
+                required
+                className={inputClassName}
+              >
+                <option value="MXN">MXN — Peso mexicano</option>
+                <option value="USD">USD — Dólar estadounidense</option>
+              </select>
+            </FormField>
+
+            <FormField label="Consumo por m²">
+              <input
+                type="number"
+                name="consumption_per_m2"
+                value={formData.consumption_per_m2}
+                onChange={handleChange}
+                required
+                min={0}
+                step="0.01"
+                className={inputClassName}
+                placeholder="Ej. 1"
+              />
+            </FormField>
+
+            <FormField label="Cobertura mínima (m²)">
+              <input
+                type="number"
+                name="min_coverage_m2"
+                value={formData.min_coverage_m2}
+                onChange={handleChange}
+                required
+                min={0}
+                step="0.01"
+                className={inputClassName}
+                placeholder="Ej. 19"
+              />
+            </FormField>
+
+            <FormField label="Cobertura máxima (m²)">
+              <input
+                type="number"
+                name="max_coverage_m2"
+                value={formData.max_coverage_m2}
+                onChange={handleChange}
+                required
+                min={0}
+                step="0.01"
+                className={inputClassName}
+                placeholder="Ej. 19"
+              />
+            </FormField>
           </div>
 
-          <div className="flex gap-6 pt-2">
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <input
-                type="checkbox"
-                name="is_fibrated"
-                checked={formData.is_fibrated}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              Is Fibrated?
-            </label>
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <CheckboxField
+              name="is_fibrated"
+              checked={formData.is_fibrated}
+              onChange={handleChange}
+              label="Producto fibratado"
+              description="Indica si el producto contiene fibras integradas."
+            />
 
-            <label className="flex items-center text-sm font-medium text-gray-700">
-              <input
-                type="checkbox"
-                name="requires_separate_primer"
-                checked={formData.requires_separate_primer}
-                onChange={handleChange}
-                className="mr-2"
-              />
-              Requires Separate Primer?
-            </label>
+            <CheckboxField
+              name="requires_separate_primer"
+              checked={formData.requires_separate_primer}
+              onChange={handleChange}
+              label="Requiere primario por separado"
+              description="El primario debe adquirirse o aplicarse por separado."
+            />
           </div>
 
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
-              onClick={onClose}
-              className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300"
+              onClick={handleClose}
+              disabled={loading}
+              className="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Cancel
+              Cancelar
             </button>
+
             <button
               type="submit"
-              disabled={loading}
-              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+              disabled={loading || brands.length === 0}
+              className="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Saving...' : 'Save Product'}
+              {loading ? "Guardando producto..." : "Guardar producto"}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
+}
 
-};
+function FormField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="text-sm font-semibold text-slate-700">{label}</span>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
+}
+
+function CheckboxField({
+  name,
+  checked,
+  onChange,
+  label,
+  description,
+}: {
+  name: string;
+  checked: boolean;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  label: string;
+  description: string;
+}) {
+  return (
+    <label className="flex cursor-pointer gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        className="mt-1 h-4 w-4"
+      />
+
+      <span>
+        <span className="block text-sm font-semibold text-slate-800">
+          {label}
+        </span>
+
+        <span className="mt-1 block text-xs text-slate-500">
+          {description}
+        </span>
+      </span>
+    </label>
+  );
+}
+
+const inputClassName =
+  "w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-700/20";

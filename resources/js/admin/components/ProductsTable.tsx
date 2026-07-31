@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
-import type { AdminProduct } from "../types/admin";
-import { ProductModal } from '../../components/products/ProductModal';
+import { useState } from "react";
+import type { AdminBrand, AdminProduct } from "../types/admin";
+import ProductModal from "../../components/products/ProductModal";
+
 type ProductsTableProps = {
   products: AdminProduct[];
+  brands: AdminBrand[];
+  onProductCreated: () => void;
 };
 
-export default function ProductsTable({ products }: ProductsTableProps) {
+export default function ProductsTable({
+  products,
+  brands,
+  onProductCreated,
+}: ProductsTableProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const handleProductCreated = () => {
-    // Reload your products list state here
+    onProductCreated();
   };
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -21,20 +30,22 @@ export default function ProductsTable({ products }: ProductsTableProps) {
           </p>
         </div>
 
-        <div> 
-        <button
-          onClick={()=>setIsModalOpen(true)}
-          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
-        >
-        Nuevo producto
-        </button>
+        <div>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+          >
+            Nuevo producto
+          </button>
 
-          <ProductModal 
+          <ProductModal
             isOpen={isModalOpen}
+            brands={brands}
             onClose={() => setIsModalOpen(false)}
             onSubmit={handleProductCreated}
           />
-          </div>
+        </div>
       </div>
 
       {products.length === 0 ? (
@@ -83,6 +94,7 @@ function ProductRow({ product }: { product: AdminProduct }) {
 
       <td className="px-3 py-3 text-slate-700">
         <p className="font-semibold text-slate-900">{product.erp_name}</p>
+
         <p className="mt-1 text-xs text-slate-500">
           {product.technical_name}
         </p>
@@ -135,7 +147,9 @@ function ProductRow({ product }: { product: AdminProduct }) {
 function EmptyState() {
   return (
     <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-      <h3 className="font-bold text-slate-900">No hay productos registrados</h3>
+      <h3 className="font-bold text-slate-900">
+        No hay productos registrados
+      </h3>
 
       <p className="mt-1 text-sm text-slate-500">
         Crea productos para poder construir nuevas comparaciones SmartMatch.
