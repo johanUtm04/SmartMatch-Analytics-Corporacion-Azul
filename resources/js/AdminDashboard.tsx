@@ -65,7 +65,8 @@ export default function AdminDashboard() {
   return (
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-6">
+      <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-700">
             SmartMatch Admin
           </p>
@@ -78,7 +79,15 @@ export default function AdminDashboard() {
             Manage products, brands, prices, performance data, and equivalence
             matches used by the SmartMatch commercial dashboard.
           </p>
-        </header>
+        </div>
+
+        <a
+          href="/dashboard"
+          className="inline-flex shrink-0 items-center justify-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
+        >
+          Ir al dashboard
+        </a>
+      </header>
 
         {loading && (
           <StatusCard
