@@ -82,7 +82,7 @@ export default function AdminDashboard() {
         </div>
 
         <a
-          href="/dashboard"
+          href="/"
           className="inline-flex shrink-0 items-center justify-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800"
         >
           Ir al dashboard
