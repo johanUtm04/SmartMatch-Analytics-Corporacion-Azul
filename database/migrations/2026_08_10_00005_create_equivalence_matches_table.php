@@ -6,43 +6,29 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('equivalence_matches', function (Blueprint $table) {
             $table->id();
 
-            // Our brand product: usually Cemix / Impercool
+            // Nullable desde el inicio (equivale al dump original + su
+            // migración posterior "make_own_product_nullable").
             $table->foreignId('own_product_id')
+                ->nullable()
                 ->constrained('products')
                 ->cascadeOnDelete();
 
-            // Competitor product: usually Sika
             $table->foreignId('competitor_product_id')
                 ->nullable()
                 ->constrained('products')
                 ->nullOnDelete();
 
-            // Example: direct, indirect, monopoly_temporal, no_equivalent
             $table->string('match_type')->default('direct');
-
-            // Example: Gama Baja, Gama Media, Premium, Alta Duración
             $table->string('gama')->nullable();
-
-            // Example: Impermeabilizantes de Techo - Líquidos
             $table->string('technical_segmentation')->nullable();
-
-            // Text from your Excel analysis column
             $table->longText('strategic_analysis')->nullable();
-
-            // Useful for sorting inside the dashboard
             $table->unsignedTinyInteger('priority')->default(1);
-
-            // To enable or disable a match without deleting it
             $table->boolean('is_active')->default(true);
-
             $table->timestamps();
 
             $table->unique(['own_product_id', 'competitor_product_id'], 'unique_equivalence_match');
@@ -53,9 +39,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('equivalence_matches');
