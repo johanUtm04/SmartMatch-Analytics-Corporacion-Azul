@@ -12,25 +12,17 @@ class BrandController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        try {
-            $brands = DB::table('brands')
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get();
+        $brands = DB::table('brands')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
-            return response()->json([
-                'status' => 'success',
-                'data' => $brands,
-            ], 200);
-        } catch (Throwable $exception) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unexpected error loading brands.',
-                'debug' => $exception->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'success',
+            'data' => $brands,
+        ]);
     }
 
     /**
