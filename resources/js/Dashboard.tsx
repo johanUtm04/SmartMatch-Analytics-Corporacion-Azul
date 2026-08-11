@@ -8,10 +8,12 @@ import PriceSimulator from "./components/PriceSimulator";
 import StrategicAlert from "./components/StrategicAlert";
 import ProductComparison from "./components/ProductComparison";
 import CommercialArgument from "./components/CommercialArgument";
+import WelcomeModal from "./components/WelcomeModal";
 
 export default function Dashboard() {
   const [matchId, setMatchId] = useState<number | null>(null);
   const [areaM2, setAreaM2] = useState<number>(500);
+  const [isModalOpen, setIsModalOpen] = useState(true);
 
   const {
     matches,
@@ -36,11 +38,17 @@ export default function Dashboard() {
     areaM2,
   });
 
+  const handleCloseModal = () => {
+    sessionStorage.setItem("hasSeenProposalModal", "true");
+    setIsModalOpen(false);
+  };
+
   const isLoading = matchesLoading || smartMatchLoading;
   const hasMatchSelected = Boolean(matchId);
 
   return (
     <main className="min-h-screen bg-slate-100 p-6">
+      <WelcomeModal isOpen={isModalOpen} onClose={handleCloseModal} />
       <div className="mx-auto max-w-7xl">
         <SmartMatchHeader />
 
@@ -112,6 +120,8 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      
     </main>
   );
 }
