@@ -1,16 +1,24 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import Dashboard from "./Dashboard";
+import Portal from "./pages/Portal";
 
-// Constant with Get the root element from the HTML document
 const rootElement = document.getElementById("app");
-// Check if the root element exists
+
 if (!rootElement) {
   throw new Error("Root element #app not found.");
 }
 
+const path = window.location.pathname;
+
+let ComponentToRender = Portal;
+
+if (path.startsWith("/smartmatch") || path.startsWith("/modulo3")) {
+  ComponentToRender = Dashboard;
+}
+
 createRoot(rootElement).render(
   <React.StrictMode>
-    <Dashboard />
+    <ComponentToRender />
   </React.StrictMode>
 );
